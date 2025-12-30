@@ -27,11 +27,14 @@ export default class ScreenshotsSchema extends BaseSchema {
 
       table.string('image_name').notNullable()
 
+
       table
         .timestamp('created_at', { useTz: true })
         .defaultTo(this.now())
         .index() // For grouping by day/hour/5-10 min
-
+      
+      table.index(['user_id','created_at'],'idx_user_created_at')
+      table.index(['company_id','created_at'],'idx_company_created_at')
       // Optional composite index for even faster queries:
       // table.index(['user_id', 'created_at'], 'idx_user_created_at');
       // table.index(['company_id', 'created_at'], 'idx_company_created_at');
