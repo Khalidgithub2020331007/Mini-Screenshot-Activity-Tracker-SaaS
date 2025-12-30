@@ -25,11 +25,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare password: string
   @column()
   declare role: 'owner' | 'employee'
-  
+
   @column({ columnName: 'company_id' })
-  declare companyId: number   
-  
-  @belongsTo(() => Company,{ foreignKey: 'company_id' })
+  declare companyId: number
+
+  @belongsTo(() => Company, { foreignKey: 'company_id' })
   declare company: BelongsTo<typeof Company>
 
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })

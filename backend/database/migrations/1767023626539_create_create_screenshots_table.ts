@@ -14,7 +14,7 @@ export default class ScreenshotsSchema extends BaseSchema {
         .references('id')
         .inTable('companies')
         .onDelete('CASCADE')
-        .index() // Filter by company quickly
+        .index()
 
       table
         .integer('user_id')
@@ -23,21 +23,18 @@ export default class ScreenshotsSchema extends BaseSchema {
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
-        .index() // Filter by employee quickly
+        .index()
 
-      table.string('image_name').notNullable()
+      table.string('name', 255).notNullable()
+      table.string('path', 255).notNullable()
+      table.string('type', 255).notNullable()
+      table.timestamp('created_at', { useTz: true }).defaultTo(this.now()).index()
+      table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
 
-
-      table
-        .timestamp('created_at', { useTz: true })
-        .defaultTo(this.now())
-        .index() // For grouping by day/hour/5-10 min
-      
-      table.index(['user_id','created_at'],'idx_user_created_at')
-      table.index(['company_id','created_at'],'idx_company_created_at')
-      // Optional composite index for even faster queries:
-      // table.index(['user_id', 'created_at'], 'idx_user_created_at');
-      // table.index(['company_id', 'created_at'], 'idx_company_created_at');
+      // Composite indexes for fast queries (Hubstaff-like)
+      table.index(['user_id', 'created_at'], 'idx_user_created_at')
+      table.index(['company_id', 'created_at'], 'idx_company_created_at')
+      table.index(['company_id', 'user_id', 'created_at'], 'idx_company_user_created_at')
     })
   }
 
@@ -45,4 +42,3 @@ export default class ScreenshotsSchema extends BaseSchema {
     this.schema.dropTable(this.tableName)
   }
 }
-

@@ -1,7 +1,34 @@
-import vine from "@vinejs/vine"
+import vine from '@vinejs/vine'
 
-import Screenshot from "#models/screenshot"
+export const uploadScreenshotValidator = vine.compile(
+  vine.object({
+    name: vine.string(),
+    path: vine.string(),
+    type: vine.string(),
+  })
+)
 
-export default class screenshotValidator{
-    
-}
+// Admin query validation
+export const adminQueryValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(3),
+    date: vine.string().trim(), // Format: YYYY-MM-DD
+    hour: vine.number().min(0).max(23).optional(),
+    groupBy: vine.enum(['10min', '5min', 'hour']).optional(),
+  })
+)
+
+// Employee query validation
+export const employeeQueryValidator = vine.compile(
+  vine.object({
+    date: vine.string().trim(), // Format: YYYY-MM-DD
+    hour: vine.number().min(0).max(23).optional(),
+    groupBy: vine.enum(['10min', '5min', 'hour']).optional(),
+  })
+)
+
+export const deleteScreenshotValidator = vine.compile(
+  vine.object({
+    id: vine.number().positive(),
+  })
+)
