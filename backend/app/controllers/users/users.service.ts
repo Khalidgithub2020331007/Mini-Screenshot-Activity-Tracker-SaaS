@@ -10,6 +10,7 @@
 import User from '../../models/user.js'
 import Company from '../../models/company.js'
 import db from '@adonisjs/lucid/services/db'
+import { messages } from '@vinejs/vine/defaults'
 
 type UserPayload = {
   name: string
@@ -80,6 +81,29 @@ export default class UserService {
       return { company, user }
     } catch (error) {
       await trx.rollback()
+      throw error
+    }
+  }
+  public async userListService(user: User, page?: number, limit?: number, name?: string) {
+    // console.log('okk1')
+    try {
+      // console.log('okk2')
+      const query = User.query()
+        .select('id', 'name')
+        .where('companyId', user.companyId)
+        .where('name', 'like', `%${name}%`)
+
+      // console.log(query.toSQL()) // ✅ works
+
+      const employees = await query.paginate(page || 1, limit || 10)
+      // console.log(employees)
+
+      return {
+        messages: 'Employee list fetched successfully',
+        data: employees,
+      }
+    } catch (error) {
+      console.log(error)
       throw error
     }
   }

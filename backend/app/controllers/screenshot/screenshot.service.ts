@@ -9,7 +9,7 @@ type ScreenshotPayload = {
 }
 type OwnerQueryPayload = {
   companyId: number
-  name: string
+  userId: number
   date: string
 }
 type EmployeeQueryPayload = {
@@ -32,18 +32,14 @@ export default class ScreenshotService {
   }
 
   public async ownerQueryService(payload: OwnerQueryPayload) {
-    const { companyId, name, date } = payload
+    const { companyId, userId, date } = payload
+    console.log(companyId, userId, date, 'service')
 
     const query = Screenshot.query()
       .where('company_id', companyId)
-      .whereRaw('DATE(created_at) = ?', [date])
-      .preload('user', (q) => {
-        q.select('id', 'name')
-        if (name) {
-          q.whereILike('name', `%${name}%`)
-        }
-      })
-      .orderBy('created_at', 'asc')
+      .where('user_id', userId)
+      .whereRaw('DATE(created_at) = ?', [date]) // date is always YYYY-MM-DD now
+    // console.log(query)
 
     return await query
   }

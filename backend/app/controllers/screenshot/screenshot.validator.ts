@@ -11,8 +11,8 @@ export const uploadScreenshotValidator = vine.compile(
 // Admin query validation
 export const adminQueryValidator = vine.compile(
   vine.object({
-    name: vine.string().trim().minLength(3),
-    date: vine.string().trim(), // Format: YYYY-MM-DD
+    userId: vine.number(),
+    date: vine.string().trim(),
     hour: vine.number().min(0).max(23).optional(),
     groupBy: vine.enum(['10min', '5min', 'hour']).optional(),
   })

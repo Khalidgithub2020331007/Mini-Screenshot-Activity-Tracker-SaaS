@@ -5,7 +5,6 @@ export const createUserValidator = vine.compile(
     name: vine.string().trim().minLength(3),
     email: vine.string().trim().email(),
     password: vine.string().trim().minLength(8),
-    role: vine.enum(['owner', 'employee']),
   })
 )
 
@@ -16,6 +15,19 @@ export const companyCreateValidator = vine.compile(
     ownerPassword: vine.string().trim().minLength(8),
     companyName: vine.string().trim().minLength(3),
     plan: vine.enum(['basic', 'pro', 'enterprise']),
+  })
+)
+export const employeeListValidator = vine.compile(
+  vine.object({
+    name: vine.string().optional(),
+    page: vine
+      .number()
+      .optional()
+      .transform((value) => Number(value)),
+    limit: vine
+      .number()
+      .optional()
+      .transform((value) => Number(value)),
   })
 )
 

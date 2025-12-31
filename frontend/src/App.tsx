@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import compnay_register from './login_registration/compnay_register';
-import login from './login_registration/login';
-import employee_template from './dashboard/employee_dashboard/employee_template';
-import owner_template from './dashboard/company_dashboard/owner_template';
+import CompanyRegister from './login_registration/Compnay_register';
+import Login from './login_registration/Login';
+import MemberDashboard from './dashboard/employee_dashboard/Employee_template';
+import OwnerDashboard from './dashboard/company_dashboard/Owner_template';
 
 type Page =  'login' | 'companyRegister' | 'employeeDashboard' | 'ownerDashboard';
 function App() {
@@ -33,7 +33,7 @@ function App() {
       {/* Top Header */}
       {showAuthLayout && (
         <header className="bg-blue-600 text-white p-4 text-center text-xl font-bold">
-          Multi-Tenant-SaaS-Workspace-Notes
+          Mini Screenshot Activity Tracker SaaS
         </header>
       )}
 
@@ -41,31 +41,10 @@ function App() {
       {showAuthLayout ? (
         <div className="flex min-h-[calc(100vh-64px)]">
           {/* 🔹 Left Sidebar (20%) */}
-          <aside className="w-1/5 bg-gray-200 p-4 border-r">
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => handleSetPage('companyRegister')}
-                className={`px-4 py-2 rounded text-left hover:bg-gray-300 transition
-                  ${page === 'companyRegister' ? 'bg-gray-300 font-semibold' : ''}`}
-              >
-                User Register
-              </button>
-
-              <button
-                onClick={() => handleSetPage('login')}
-                className={`px-4 py-2 rounded text-left hover:bg-gray-300 transition
-                  ${page === 'login' ? 'bg-gray-300 font-semibold' : ''}`}
-              >
-                User Login
-              </button>
-
-            
-            </div>
-          </aside>
+          
 
           {/* 🔹 Right Content (80%) */}
-          <main className="w-4/5 p-6">
-            {page === 'companyRegister' && <compnay_regist goToPage={handleSetPage} />}
+          <main className="w-5/5 p-6">
             {page === 'login' && <Login goToPage={handleSetPage} />}
             {page === 'companyRegister' && <CompanyRegister goToPage={handleSetPage} />}
           </main>
@@ -74,10 +53,10 @@ function App() {
         /* Dashboards (full width) */
         <main className="p-4">
           {page === 'ownerDashboard' && (
-            <OwnerDashboard onLogout={() => handleSetPage('userLogin')} />
+            <OwnerDashboard onLogout={() => handleSetPage('login')} />
           )}
           {page === 'employeeDashboard' && (
-            <MemberDashboard onLogout={() => handleSetPage('userLogin')} />
+            <MemberDashboard onLogout={() => handleSetPage('login')} />
           )}
         </main>
       )}

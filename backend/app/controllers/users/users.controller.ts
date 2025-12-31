@@ -2,6 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import UserService from './users.service.js'
 import { createUserValidator, companyCreateValidator } from './users.validator.js'
 import User from '../../models/user.js'
+import { employeeListValidator } from './users.validator.js'
 
 export default class UsersController {
   private userService = new UserService()
@@ -45,6 +46,7 @@ export default class UsersController {
    * Create user
    */ public async createUserController({ request, response, auth }: HttpContext) {
     const user = auth.user
+    console.log(user)
     if (!user) {
       return response.unauthorized({ error: 'Unauthorized' })
     }
@@ -112,5 +114,22 @@ export default class UsersController {
       return response.unauthorized({ error: 'Unauthorized' })
     }
     return response.ok({ message: 'already login' })
+  }
+  public async employeeList({ request, response, auth }: HttpContext) {
+    const user = auth.user
+
+    if (user!.role !== 'owner') {
+      return response.forbidden({ error: 'Forbidden' })
+    }
+    // console.log(user)
+    const { page, limit, name } = await request.validateUsing(employeeListValidator)
+    // console.log(page, limit, name)
+    try {
+      const employeeList = await this.userService.userListService(user!, page, limit, name)
+      // console.log('okk')
+      return response.ok(employeeList)
+    } catch (error) {
+      return response.badRequest({ error: error.message })
+    }
   }
 }

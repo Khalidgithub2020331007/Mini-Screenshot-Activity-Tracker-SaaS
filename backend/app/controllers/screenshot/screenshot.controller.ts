@@ -56,17 +56,32 @@ export default class ScreenshotController {
     if (user!.role !== 'owner') {
       return response.forbidden({ error: 'Forbidden' })
     }
-    const { name, date, groupBy } = await request.validateUsing(adminQueryValidator)
+
+    const { userId, date, groupBy } = await request.validateUsing(adminQueryValidator)
+
+    // Validate date
+
     try {
-      const screenshot = await this.screenshotService.ownerQueryService({
+      const screenshots = await this.screenshotService.ownerQueryService({
         companyId: user!.companyId,
-        name,
+        userId,
         date: date ?? new Date().toISOString().split('T')[0],
       })
-      const grouped = groupScreenshots(screenshot, groupBy ?? '10min')
+
+      // Map createdAt and updatedAt to ISO strings
+      const formattedScreenshots = screenshots.map((s) => {
+        return {
+          ...s.serialize(), // converts model to plain object
+          created_at: s.createdAt.toISO(), // Luxon DateTime to ISO string
+          updated_at: s.updatedAt.toISO(),
+        }
+      })
+
+      const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
+      console.log(grouped)
       return grouped
     } catch (error) {
-      console.log(error)
+      console.log('Error in ownerQueryController:', error)
       return response.badRequest({ error: error.message })
     }
   }
@@ -83,7 +98,10 @@ export default class ScreenshotController {
         userId: user!.id,
         date: date ?? new Date().toISOString().split('T')[0],
       })
+      // console.log(screenshot)
+      // console.log('okkk')
       const grouped = groupScreenshots(screenshot, groupBy ?? '10min')
+      // console.log(groupBy)
       return grouped
     } catch (error) {
       console.log(error)

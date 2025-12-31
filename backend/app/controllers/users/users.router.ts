@@ -12,3 +12,6 @@ router.post('/logout', [UsersController, 'logoutController'])
 router
   .post('/checklogin', [UsersController, 'checklogin'])
   .use(middleware.auth({ guards: ['api'] }))
+router
+  .get('/employees_list', [UsersController, 'employeeList'])
+  .use(middleware.auth({ guards: ['api'] }))
