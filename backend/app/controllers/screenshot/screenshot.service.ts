@@ -1,5 +1,5 @@
 import Screenshot from '../../models/screenshot.js'
-
+import db from '@adonisjs/lucid/services/db'
 type ScreenshotPayload = {
   name: string
   path: string
@@ -33,17 +33,14 @@ export default class ScreenshotService {
 
   public async ownerQueryService(payload: OwnerQueryPayload) {
     const { companyId, userId, date } = payload
-    console.log(companyId, userId, date, 'service')
 
-    const query = Screenshot.query()
+    const query = await Screenshot.query()
       .where('company_id', companyId)
       .where('user_id', userId)
-      .whereRaw('DATE(created_at) = ?', [date]) // date is always YYYY-MM-DD now
-    // console.log(query)
+      .whereRaw('DATE(created_at) = ?', [date])
 
-    return await query
+    return query
   }
-
   public async employeeQueryService(payload: EmployeeQueryPayload) {
     const { companyId, userId, date } = payload
 

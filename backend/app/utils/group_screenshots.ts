@@ -1,31 +1,38 @@
+// app/utils/group_screenshots.ts
 import { DateTime } from 'luxon'
 
-export function groupScreenshots(screenshots: any[], interval: '5min' | '10min' | 'hour') {
-  const result: any = {}
+export function groupScreenshots(
+  screenshots: { createdAt: string }[],
+  groupBy: '5min' | '10min' | '20min' | 'hour'
+) {
+  const grouped: Record<string, Record<string, any[]>> = {}
 
-  screenshots.forEach((shot) => {
-    const time = DateTime.fromJSDate(shot.createdAt)
+  for (const s of screenshots) {
+    // console.log('RAW createdAt:', s.createdAt)
 
-    const hourKey = time.toFormat('HH:00')
+    const dt = DateTime.fromISO(s.createdAt, { zone: 'utc' }).setZone('Asia/Dhaka')
 
-    if (!result[hourKey]) {
-      result[hourKey] = {}
+    // console.log('PARSED:', dt.toISO(), 'isValid:', dt.isValid)
+
+    if (!dt.isValid) continue
+
+    const dateKey = dt.toISODate()!
+
+    let timeKey: string
+
+    if (groupBy === 'hour') {
+      timeKey = dt.startOf('hour').toFormat('HH:mm')
+    } else {
+      const interval = groupBy === '5min' ? 5 : 10
+      const rounded = Math.floor(dt.minute / interval) * interval
+
+      timeKey = dt.set({ minute: rounded, second: 0, millisecond: 0 }).toFormat('HH:mm')
     }
 
-    let minuteKey = 'full-hour'
+    grouped[dateKey] ??= {}
+    grouped[dateKey][timeKey] ??= []
+    grouped[dateKey][timeKey].push(s)
+  }
 
-    if (interval !== 'hour') {
-      const step = interval === '5min' ? 5 : 10
-      const roundedMinute = Math.floor(time.minute / step) * step
-      minuteKey = `${time.toFormat('HH')}:${roundedMinute.toString().padStart(2, '0')}`
-    }
-
-    if (!result[hourKey][minuteKey]) {
-      result[hourKey][minuteKey] = []
-    }
-
-    result[hourKey][minuteKey].push(shot)
-  })
-
-  return result
+  return grouped
 }

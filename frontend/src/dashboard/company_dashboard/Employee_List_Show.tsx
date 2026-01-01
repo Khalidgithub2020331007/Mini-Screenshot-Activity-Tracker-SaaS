@@ -27,8 +27,8 @@ const EmployeeListShow = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
-  // Fetch employees
-  const fetchEmployees = useCallback(async () => {
+useEffect(() => {
+  const fetchEmployees = async () => {
     setLoading(true);
     setError('');
     try {
@@ -37,12 +37,12 @@ const EmployeeListShow = () => {
       });
 
       const responseData = res.data?.data;
-      // console.log(responseData)
       if (!responseData) {
         setEmployees([]);
         setMeta({ currentPage: 1, firstPage: 1, lastPage: 1, totalPages: 0, perPage: limit });
         return;
       }
+
       setEmployees(responseData.data);
       const m = responseData.meta;
       setMeta({
@@ -60,15 +60,15 @@ const EmployeeListShow = () => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, searchQuery]);
+  };
 
-  // Debounced fetch
-  useEffect(() => {
-    const debounce = setTimeout(() => {
-      fetchEmployees();
-    }, 1000); // 1 second debounce
-    return () => clearTimeout(debounce);
-  }, [fetchEmployees]);
+  const debounce = setTimeout(() => {
+    fetchEmployees();
+  }, 200);
+
+  return () => clearTimeout(debounce);
+}, [page, limit, searchQuery]); 
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);

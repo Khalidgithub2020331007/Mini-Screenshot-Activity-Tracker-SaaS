@@ -29,7 +29,6 @@ export default class ScreenshotController {
     }
 
     try {
-      // ✅ Upload to Cloudinary
       const uploadResult = await cloudinary.uploader.upload(file.tmpPath, {
         folder: 'image_of_screenshots',
       })
@@ -59,8 +58,6 @@ export default class ScreenshotController {
 
     const { userId, date, groupBy } = await request.validateUsing(adminQueryValidator)
 
-    // Validate date
-
     try {
       const screenshots = await this.screenshotService.ownerQueryService({
         companyId: user!.companyId,
@@ -68,18 +65,16 @@ export default class ScreenshotController {
         date: date ?? new Date().toISOString().split('T')[0],
       })
 
-      // Map createdAt and updatedAt to ISO strings
       const formattedScreenshots = screenshots.map((s) => {
         return {
           ...s.serialize(), // converts model to plain object
-          created_at: s.createdAt.toISO(), // Luxon DateTime to ISO string
-          updated_at: s.updatedAt.toISO(),
+          createdAt: s.createdAt.toISO(), // Luxon DateTime to ISO string
+          updatedAt: s.updatedAt.toISO(),
         }
       })
 
       const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
-      console.log(grouped)
-      return grouped
+      return JSON.stringify(grouped)
     } catch (error) {
       console.log('Error in ownerQueryController:', error)
       return response.badRequest({ error: error.message })
@@ -98,10 +93,7 @@ export default class ScreenshotController {
         userId: user!.id,
         date: date ?? new Date().toISOString().split('T')[0],
       })
-      // console.log(screenshot)
-      // console.log('okkk')
       const grouped = groupScreenshots(screenshot, groupBy ?? '10min')
-      // console.log(groupBy)
       return grouped
     } catch (error) {
       console.log(error)

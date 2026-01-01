@@ -14,7 +14,7 @@ export const adminQueryValidator = vine.compile(
     userId: vine.number(),
     date: vine.string().trim(),
     hour: vine.number().min(0).max(23).optional(),
-    groupBy: vine.enum(['10min', '5min', 'hour']).optional(),
+    groupBy: vine.enum(['10min', '5min', '20min']).optional(),
   })
 )
 
@@ -23,7 +23,7 @@ export const employeeQueryValidator = vine.compile(
   vine.object({
     date: vine.string().trim(), // Format: YYYY-MM-DD
     hour: vine.number().min(0).max(23).optional(),
-    groupBy: vine.enum(['10min', '5min', 'hour']).optional(),
+    groupBy: vine.enum(['10min', '5min', '20min', 'hour']).optional(),
   })
 )
 

@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import api from '../api/axios';
 
-type Props = {
+type LoginProps = {
+  setname: React.Dispatch<React.SetStateAction<string>>;
   goToPage?: (
     page: 'login' | 'companyRegister' | 'employeeDashboard' | 'ownerDashboard'
   ) => void;
@@ -12,7 +13,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const strongPasswordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-const Login = ({ goToPage }: Props) => {
+const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -56,25 +57,23 @@ const Login = ({ goToPage }: Props) => {
 
     try {
       const res = await api.post('/login', { email, password });
-      const {token} = res.data.token;
-      localStorage.setItem('token', token);
+
+      // console.log(res,email,password)
+      // const {token} = res.data.token;
+      // localStorage.setItem('token', token);
 
       if (!res.data.user) {
-        alert('Wrong email or password');
+        alert('Wrong credentials');
         return;
       }
 
       const backendUser = res.data.user;
-      const user = {
-        id: backendUser.id,
-        name: backendUser.name,
-        email: backendUser.email,
-        role: backendUser.role,
-        companyId: backendUser.companyId,
-      };
+      // const { token } = res.data;
+      // console.log(token,res.data)
+      // localStorage.setItem('token', token);
 
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
-      alert(res.data.message);
+       setname(backendUser.name);
+      // alert(res.data.message);
 
       if (goToPage) {
         goToPage(

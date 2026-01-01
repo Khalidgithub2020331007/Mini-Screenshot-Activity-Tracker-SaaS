@@ -16,7 +16,7 @@ const TopNavbar = ({ onLogout }: Props) => {
     } catch (err: unknown) {
       console.error('Logout failed:', err);
     } finally {
-      localStorage.removeItem('loggedInUser'); 
+      // localStorage.removeItem('loggedInUser'); 
       onLogout();
     }
   };

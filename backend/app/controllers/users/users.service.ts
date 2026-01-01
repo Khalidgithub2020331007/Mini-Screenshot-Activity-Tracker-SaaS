@@ -85,18 +85,13 @@ export default class UserService {
     }
   }
   public async userListService(user: User, page?: number, limit?: number, name?: string) {
-    // console.log('okk1')
     try {
-      // console.log('okk2')
       const query = User.query()
         .select('id', 'name')
         .where('companyId', user.companyId)
         .where('name', 'like', `%${name}%`)
 
-      // console.log(query.toSQL()) // ✅ works
-
       const employees = await query.paginate(page || 1, limit || 10)
-      // console.log(employees)
 
       return {
         messages: 'Employee list fetched successfully',

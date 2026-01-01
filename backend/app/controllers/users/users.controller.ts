@@ -15,9 +15,9 @@ export default class UsersController {
    * Create company
    */
   public async createCompanyController({ request, response }: HttpContext) {
-    console.log('create company')
+    // console.log('create company')
     const data = await request.validateUsing(companyCreateValidator)
-    console.log(data)
+    // console.log(data)
 
     try {
       const { company, user } = await this.userService.createCompanyService(data)
@@ -46,7 +46,7 @@ export default class UsersController {
    * Create user
    */ public async createUserController({ request, response, auth }: HttpContext) {
     const user = auth.user
-    console.log(user)
+    // console.log(user)
     if (!user) {
       return response.unauthorized({ error: 'Unauthorized' })
     }
@@ -81,37 +81,55 @@ export default class UsersController {
    * login company owner
    */
   public async loginController({ request, response, auth }: HttpContext) {
+    // console.log('hit login')
     try {
-      const { email, password } = await request.only(['email', 'password'])
+      const { email, password } = request.only(['email', 'password'])
       const user = await User.verifyCredentials(email, password)
       if (!user) {
         return response.unauthorized({ error: 'Unauthorized' })
       }
+      // console.log(user)
 
-      const token = await User.accessTokens.create(user, ['*'], {
-        expiresIn: '1d',
-      })
-      const redirectUrl = user.role === 'owner' ? '/owner/dashboard' : '/member/dashboard'
+      const token = await auth.use('jwt').generate(user)
+      console.log('token-------', token.token)
+      console.log('---------token')
+      // response.cookie('token', token.token, {
+      //   httpOnly: true,
+      //   sameSite: 'lax',
+      //   path: '/',
+      //   maxAge: token.maxAge,
+      // })
+      // console.log('token------', token)
       return response.ok({
         message: 'Login successful',
         user: user,
         token: token,
-        redirectUrl,
+        redirectUrl: '/owner/dashboard',
       })
     } catch (error) {
       return response.badRequest({ error: error.message })
     }
   }
-  public async logoutController({ response, auth }: HttpContext) {
-    await auth.use('api').invalidateToken()
-    return response.ok({
-      message: 'Logout successful',
-    })
+  public async logoutController({ auth, response }: HttpContext) {
+    try {
+      // Revoke the token (optional for JWT)
+
+      console.log('logout')
+
+      return response.ok({
+        message: 'Logout successful',
+      })
+    } catch (error) {
+      console.error(error)
+      return response.badRequest({ message: 'Logout failed' })
+    }
   }
+
   public async checklogin({ response, auth }: HttpContext) {
     const user = auth.user
+    // console.log(user)
     if (!user) {
-      return response.unauthorized({ error: 'Unauthorized' })
+      return response.unauthorized({ error: 'Unauthorized2' })
     }
     return response.ok({ message: 'already login' })
   }
@@ -121,12 +139,10 @@ export default class UsersController {
     if (user!.role !== 'owner') {
       return response.forbidden({ error: 'Forbidden' })
     }
-    // console.log(user)
+
     const { page, limit, name } = await request.validateUsing(employeeListValidator)
-    // console.log(page, limit, name)
     try {
       const employeeList = await this.userService.userListService(user!, page, limit, name)
-      // console.log('okk')
       return response.ok(employeeList)
     } catch (error) {
       return response.badRequest({ error: error.message })

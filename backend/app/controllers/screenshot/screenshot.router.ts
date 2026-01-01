@@ -4,10 +4,13 @@ import { middleware } from '#start/kernel'
 const ScreenshotController = () => import('./screenshot.controller.js')
 router
   .post('/upload-screenshot', [ScreenshotController, 'uploadScreenshotController'])
-  .use(middleware.auth({ guards: ['api'] }))
+  .use(middleware.auth({ guards: ['jwt'] }))
+// router
+//   .post('/owner-query', [ScreenshotController, 'ownerDashboard'])
+//   .use(middleware.auth({ guards: ['api'] }))
 router
   .post('/owner-query', [ScreenshotController, 'ownerQueryController'])
-  .use(middleware.auth({ guards: ['api'] }))
+  .use(middleware.auth({ guards: ['jwt'] }))
 router
   .post('/employee-query', [ScreenshotController, 'employeeQueryController'])
-  .use(middleware.auth({ guards: ['api'] }))
+  .use(middleware.auth({ guards: ['jwt'] }))

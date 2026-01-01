@@ -2,20 +2,19 @@ import api from '../../api/axios';
 
 type Props = {
   onLogout: () => void;
+  name:string
 };
 
-const TopNavbar = ({ onLogout }: Props) => {
-  const userStr = localStorage.getItem('loggedInUser');
-  const user = userStr ? JSON.parse(userStr) : null;
-  const ownerName = user?.name || '';
+const TopNavbar: React.FC<Props> = ({ onLogout,name }) => {
+  
 
   const handleLogout = async () => {
     try {
-      await api.post('/user/logout'); 
+      await api.post('/logout'); 
     } catch (err: unknown) {
       console.error('Logout failed:', err);
     } finally {
-      localStorage.removeItem('loggedInUser'); 
+      localStorage.removeItem('token'); 
       onLogout();
     }
   };
@@ -23,7 +22,7 @@ const TopNavbar = ({ onLogout }: Props) => {
 
   return (
     <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-          <div className="text-sm">{ownerName}</div>
+          <div className="text-sm">{name}</div>
           
       <button
         onClick={handleLogout}

@@ -5,14 +5,19 @@ import EmployeeList from './Employee_List_Show';
 
 type Page = 'createEmployee' | 'employeeList';
 
-const OwnerTemplate = ({ onLogout }: { onLogout: () => void }) => {
-  const [activePage, setActivePage] = useState<Page>('createEmployee');
+type OwnerTemplateProps = {
+  onLogout: () => void;
+  name: string;
+};
+
+
+const OwnerTemplate: React.FC<OwnerTemplateProps> = ({ onLogout, name }) => {  const [activePage, setActivePage] = useState<Page>('createEmployee');
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Top Navbar */}
       <header className="sticky top-0 z-10">
-        <TopNavbar onLogout={onLogout} />
+        <TopNavbar name={name} onLogout={onLogout} />
       </header>
 
       {/* Main content */}
