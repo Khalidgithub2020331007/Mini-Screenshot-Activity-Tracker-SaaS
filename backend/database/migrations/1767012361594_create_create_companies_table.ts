@@ -7,7 +7,7 @@ export default class CompaniesSchema extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
       table.string('name').notNullable().unique()
-      table.enum('plan', ['basic', 'pro', 'enterprise']).defaultTo('basic')
+      table.integer('plan_id').unsigned().references('id').inTable('plans')
 
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())

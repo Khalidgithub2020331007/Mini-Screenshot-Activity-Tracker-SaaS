@@ -51,14 +51,16 @@
     "typescript": "~5.8"
   },
   "dependencies": {
-    "@adonisjs/auth": "^9.4.0",
+    "@adonisjs/auth": "^9.5.1",
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
     "@maximemrf/adonisjs-jwt": "^0.6.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@vinejs/vine": "^3.0.1",
     "adonis5-jwt": "^1.1.7",
     "cloudinary": "^2.8.0",
+    "jsonwebtoken": "^9.0.3",
     "luxon": "^3.7.2",
     "mysql2": "^3.16.0",
     "reflect-metadata": "^0.2.2"

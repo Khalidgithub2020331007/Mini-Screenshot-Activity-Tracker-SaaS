@@ -1,3 +1,4 @@
+// app.tsx
 import { useState } from 'react';
 import CompanyRegister from './login_registration/Compnay_register';
 import Login from './login_registration/Login';
@@ -6,10 +7,23 @@ import OwnerDashboard from './dashboard/company_dashboard/Owner_template';
 
 type Page =  'login' | 'companyRegister' | 'employeeDashboard' | 'ownerDashboard';
 function App() {
-  const getInitialPage = (): Page => {
-    
-    return 'login';
-  };
+  const getInitialPage = () => {
+    try {
+      const user = localStorage.getItem('user');
+      if (user) {
+        const backendUser = JSON.parse(user);
+        if (backendUser.role === 'owner') {
+          return 'ownerDashboard';
+        } else {
+          return 'employeeDashboard';
+        }
+      }
+      return 'login';
+    } catch (err) {
+      console.error('Error getting initial page:', err);
+      return 'login';
+    }
+  }
   const handleSetPage = (newPage:Page) => {
     setPage(newPage);
     localStorage.setItem('page', newPage);
@@ -47,9 +61,9 @@ function App() {
           {page === 'ownerDashboard' && (
             <OwnerDashboard name={name} onLogout={() => handleSetPage('login')} />
           )}
-          {/* {page === 'employeeDashboard' && ( */}
-            {/* // <MemberDashboard name={name} onLogout={() => handleSetPage('login')} /> */}
-          {/* )} */}
+          {page === 'employeeDashboard' && 
+              <MemberDashboard name={name} onLogout={() => handleSetPage('login')} /> 
+            }
         </main>
       )}
     </div>

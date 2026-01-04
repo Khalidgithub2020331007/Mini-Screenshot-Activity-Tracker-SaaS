@@ -11,6 +11,7 @@ import User from '../../models/user.js'
 import Company from '../../models/company.js'
 import db from '@adonisjs/lucid/services/db'
 import { messages } from '@vinejs/vine/defaults'
+import Plan from '../../models/plan.js'
 
 type UserPayload = {
   name: string
@@ -23,6 +24,11 @@ type CompanyPayload = {
   ownerPassword: string
   companyName: string
   plan: 'basic' | 'pro' | 'enterprise'
+}
+type planPayload = {
+  name: string
+  price: number
+  number_of_person: number
 }
 
 export default class UserService {
@@ -101,5 +107,9 @@ export default class UserService {
       console.log(error)
       throw error
     }
+  }
+  public async createPlanService(name: string, price: number, number_of_person: number) {
+    const plan = await Plan.create({ name, price, number_of_person })
+    return plan
   }
 }

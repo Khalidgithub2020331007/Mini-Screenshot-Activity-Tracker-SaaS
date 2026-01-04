@@ -8,11 +8,7 @@ export function groupScreenshots(
   const grouped: Record<string, Record<string, any[]>> = {}
 
   for (const s of screenshots) {
-    // console.log('RAW createdAt:', s.createdAt)
-
     const dt = DateTime.fromISO(s.createdAt, { zone: 'utc' }).setZone('Asia/Dhaka')
-
-    // console.log('PARSED:', dt.toISO(), 'isValid:', dt.isValid)
 
     if (!dt.isValid) continue
 

@@ -1,31 +1,46 @@
-import env from '#start/env'
+// config/auth.ts
+
 import { defineConfig } from '@adonisjs/auth'
-import { tokensGuard, tokensUserProvider } from '@adonisjs/auth/access_tokens'
-import { sessionUserProvider } from '@adonisjs/auth/session'
-import type { InferAuthenticators, InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
+import { InferAuthEvents, Authenticators } from '@adonisjs/auth/types'
+import { sessionGuard, sessionUserProvider } from '@adonisjs/auth/session'
+import { tokensUserProvider } from '@adonisjs/auth/access_tokens'
 import { jwtGuard } from '@maximemrf/adonisjs-jwt/jwt_config'
-import { BaseJwtContent, JwtGuardUser } from '@maximemrf/adonisjs-jwt/types'
+import { JwtGuardUser, BaseJwtContent } from '@maximemrf/adonisjs-jwt/types'
 import User from '../app/models/user.js'
+import env from '#start/env'
 
 interface JwtContent extends BaseJwtContent {
   email: string
 }
 
 const authConfig = defineConfig({
+  // define the default authenticator to jwt
   default: 'jwt',
   guards: {
-    api: tokensGuard({
-      provider: tokensUserProvider({
-        tokens: 'accessTokens',
+    web: sessionGuard({
+      useRememberMeTokens: false,
+      provider: sessionUserProvider({
         model: () => import('../app/models/user.js'),
       }),
     }),
+    // add the jwt guard
     jwt: jwtGuard({
-      tokenName: 'jwt',
-      tokenExpiresIn: '7d',
+      // tokenName is the name of the token passed as cookie, it can be optional, by default it is 'token'
+      tokenName: 'token',
+      // tokenExpiresIn can be a string or a number, it can be optional
+      tokenExpiresIn: '1h',
       // if you want to use cookies for the authentication instead of the bearer token (optional)
       useCookies: true,
+      // secret is the secret used to sign the token, it can be optional, by default it uses the application key
+      // you can use a env variable like JWT_SECRET or set it directly with a string
+      // if you don't have specific needs, please discard this option
+      secret: env.get('JWT_SECRET'),
       provider: sessionUserProvider({
+        model: () => import('../app/models/user.js'),
+      }),
+      // if you want to use refresh tokens, you have to set the refreshTokenUserProvider
+      refreshTokenUserProvider: tokensUserProvider({
+        tokens: 'refreshTokens',
         model: () => import('../app/models/user.js'),
       }),
       // content is a function that takes the user and returns the content of the token, it can be optional, by default it returns only the user id
@@ -38,16 +53,4 @@ const authConfig = defineConfig({
     }),
   },
 })
-
 export default authConfig
-
-/**
- * Inferring types from the configured auth
- * guards.
- */
-declare module '@adonisjs/auth/types' {
-  export interface Authenticators extends InferAuthenticators<typeof authConfig> {}
-}
-declare module '@adonisjs/core/types' {
-  interface EventsList extends InferAuthEvents<Authenticators> {}
-}

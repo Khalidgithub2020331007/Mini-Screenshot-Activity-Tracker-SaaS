@@ -53,27 +53,15 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
 
     try {
       const res = await api.post('/login', { email, password });
 
-      // console.log(res,email,password)
-      // const {token} = res.data.token;
-      // localStorage.setItem('token', token);
+      console.log(res)
+      const backendUser = res.data.data.user;
 
-      if (!res.data.user) {
-        alert('Wrong credentials');
-        return;
-      }
-
-      const backendUser = res.data.user;
-      // const { token } = res.data;
-      // console.log(token,res.data)
-      // localStorage.setItem('token', token);
-
-       setname(backendUser.name);
-      // alert(res.data.message);
+      setname(backendUser.name);
+      localStorage.setItem('user', JSON.stringify(backendUser));
 
       if (goToPage) {
         goToPage(
@@ -145,6 +133,7 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
           <span className="cursor-pointer" onClick={() => goToPage('companyRegister')}>
             Go to Company Register
           </span>
+         
         </div>
       )}
     </form>

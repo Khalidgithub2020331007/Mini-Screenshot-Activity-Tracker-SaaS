@@ -1,4 +1,5 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 export default class UsersSchema extends BaseSchema {
   protected tableName = 'users'

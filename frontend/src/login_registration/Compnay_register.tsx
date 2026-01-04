@@ -60,7 +60,7 @@ const CompanyRegister = ({ goToPage }: Props) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) => {
     const { name, value } = e.target;
-    console.log(name, value);
+    // console.log(name, value);
     setCompany(prev => ({
       ...prev,
       [name]: value,

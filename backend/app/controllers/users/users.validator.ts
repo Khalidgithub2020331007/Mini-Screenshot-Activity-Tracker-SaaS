@@ -49,3 +49,20 @@ companyCreateValidator.messagesProvider = new SimpleMessagesProvider({
   length: 'the value of {{field}} must be {{length}} characters long',
   email: 'the value of {{field}} must be a valid email',
 })
+
+export const planCreateValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(3),
+    price: vine.number().min(0).max(10000),
+    numberOfPerson: vine.number().min(0).max(100),
+  })
+)
+planCreateValidator.messagesProvider = new SimpleMessagesProvider({
+  string: 'the value of {{field}} must be a required string',
+  number: 'the value of {{field}} must be a number',
+  enum: 'the value of {{field}} must be one of {{enum}}',
+  any: 'the value of {{field}} is not valid',
+  minLength: 'the value of {{field}} must be at least {{minLength}} characters long',
+  maxLength: 'the value of {{field}} must be at most {{maxLength}} characters long',
+  email: 'the value of {{field}} must be a valid email',
+})
