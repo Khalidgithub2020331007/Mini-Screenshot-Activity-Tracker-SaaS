@@ -199,7 +199,7 @@ const CompanyRegister = ({ goToPage }: Props) => {
             ))}
           </select>
         </div>
-
+        {loginError ? <p className="text-red-500 text-sm text-center">{loginError}</p> : null}
         {/* Submit */}
         <button
           type="submit"
