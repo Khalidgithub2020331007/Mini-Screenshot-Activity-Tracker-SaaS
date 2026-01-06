@@ -107,7 +107,7 @@ export default class UsersController {
   }
   public async checklogin({ response, auth }: HttpContext) {
     const user = auth.user
-    console.log(user)
+    // console.log(user)
     if (!user) {
       return response.unauthorized({ error: 'Unauthorized2' })
     }

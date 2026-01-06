@@ -48,9 +48,8 @@ const Add_ScreenShots: React.FC = () => {
       setPreviewUrl(null);
 
       console.log('Uploaded screenshot:', res.data);
-    } catch (err: any) {
-      console.error(err);
-      setMessage(err.response?.data?.error || 'Failed to upload screenshot');
+    } catch {
+      setMessage('Failed to upload screenshot');
     } finally {
       setLoading(false);
     }

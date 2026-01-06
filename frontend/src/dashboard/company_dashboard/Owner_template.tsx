@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import TopNavbar from './TopNavbar'
 import EmployeeRegister from './Employee_register'
 import EmployeeList from './Employee_List_Show'
-import Add_ScreenShots from './Add_ScreenShots'
-import Show_Screenshot from './Show_Screenshot'
+// import Add_ScreenShots from './Add_ScreenShots'
+// import Show_Screenshot from './Show_Screenshot'
 
 type Page =
   | 'createEmployee'
@@ -26,7 +26,7 @@ const OwnerTemplate: React.FC<OwnerTemplateProps> = ({ onLogout, name }) => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, activePage)
-    console.log('dependenci usesseffect')
+    // console.log('dependenci usesseffect')
   }, [activePage])
 
  
@@ -72,8 +72,8 @@ const OwnerTemplate: React.FC<OwnerTemplateProps> = ({ onLogout, name }) => {
               />
             )}
             {activePage === 'employeeList' && <EmployeeList />}
-            {activePage === 'addScreenShots' && <Add_ScreenShots />}
-            {activePage === 'showScreenShots' && <Show_Screenshot />}
+            {/* {activePage === 'addScreenShots' && <Add_ScreenShots />} */}
+            {/* {activePage === 'showScreenShots' && <Show_Screenshot />} */}
           </div>
         </main>
       </div>

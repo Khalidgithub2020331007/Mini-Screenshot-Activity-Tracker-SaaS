@@ -19,8 +19,8 @@ const TopNavbar: React.FC<Props> = ({ onLogout,name }) => {
       delete api.defaults.headers.common['Authorization'];
       onLogout();
     }
-    const res = api.post('/checklogin')
-    console.log(res)
+    api.post('/checklogin')
+    // console.log(res)
   };
     
 

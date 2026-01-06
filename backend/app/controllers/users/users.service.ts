@@ -41,7 +41,7 @@ export default class UserService {
   }
 
   async createCompanyService(payload: CompanyPayload) {
-    console.log(payload)
+    // console.log(payload)
     const { ownerName, ownerEmail, ownerPassword, companyName, planId } = payload
 
     const trx = await db.transaction()
@@ -88,7 +88,7 @@ export default class UserService {
         data: employees,
       }
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       throw error
     }
   }

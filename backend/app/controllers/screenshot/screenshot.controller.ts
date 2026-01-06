@@ -76,7 +76,7 @@ export default class ScreenshotController {
       const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
       return JSON.stringify(grouped)
     } catch (error) {
-      console.log('Error in ownerQueryController:', error)
+      // console.log('Error in ownerQueryController:', error)
       return response.badRequest({ error: error.message })
     }
   }
@@ -103,7 +103,7 @@ export default class ScreenshotController {
       const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
       return JSON.stringify(grouped)
     } catch (error) {
-      console.log(error)
+      // console.log(error)
       return response.badRequest({ error: error.message })
     }
   }

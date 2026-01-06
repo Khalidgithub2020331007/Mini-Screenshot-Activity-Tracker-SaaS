@@ -92,16 +92,17 @@ const CompanyRegister = ({ goToPage }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    console.log(company)
+    // console.log(company)
 
     try {
       setLoading(true);
       await api.post('/create-company', company);
+      alert('Company created successfully. Please login.');
   
       goToPage?.('login');
-    } catch (err) {
-      console.log(err)
-      alert('Something went wrong. Please try again.');
+    } catch{
+      // console.log(err)
+      // alert('Something went wrong. Please try again.');
       setLoginError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
