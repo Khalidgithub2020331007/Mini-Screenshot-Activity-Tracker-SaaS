@@ -1,16 +1,7 @@
-/*
-1.company signup
-2.plan selection
-3.add/create employee
-4. employee login/logout
-5.
-6.
-*/
-
 import User from '../../models/user.js'
 import Company from '../../models/company.js'
 import db from '@adonisjs/lucid/services/db'
-import { messages } from '@vinejs/vine/defaults'
+import Plan from '../../models/plan.js'
 
 type UserPayload = {
   name: string
@@ -22,13 +13,10 @@ type CompanyPayload = {
   ownerEmail: string
   ownerPassword: string
   companyName: string
-  plan: 'basic' | 'pro' | 'enterprise'
+  planId: number
 }
 
 export default class UserService {
-  /**
-   * Create user
-   */
   async createUserService(payload: UserPayload, companyId: number) {
     const { name, email, password } = payload
     const company = await Company.find(companyId)
@@ -37,7 +25,6 @@ export default class UserService {
       throw new Error('Company not found')
     }
 
-    // Create user
     const user = await User.create({
       name: name,
       email: email,
@@ -49,11 +36,9 @@ export default class UserService {
     return user
   }
 
-  /**
-   * Create company
-   */
   async createCompanyService(payload: CompanyPayload) {
-    const { ownerName, ownerEmail, ownerPassword, companyName, plan } = payload
+    console.log(payload)
+    const { ownerName, ownerEmail, ownerPassword, companyName, planId } = payload
 
     const trx = await db.transaction()
 
@@ -64,7 +49,7 @@ export default class UserService {
         throw new Error('Company already exists')
       }
 
-      const company = await Company.create({ name: companyName, plan }, { client: trx })
+      const company = await Company.create({ name: companyName, plan_id: planId }, { client: trx })
 
       const user = await User.create(
         {
@@ -101,5 +86,13 @@ export default class UserService {
       console.log(error)
       throw error
     }
+  }
+  public async createPlanService(name: string, price: number, number_of_person: number) {
+    const plan = await Plan.create({ name, price, number_of_person })
+    return plan
+  }
+  public async getPlanService() {
+    const plans = await Plan.query().select('id', 'name', 'price', 'number_of_person')
+    return plans
   }
 }

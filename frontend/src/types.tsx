@@ -9,7 +9,7 @@ export type Company = {
 
 export type CreateCompanyPayload = {
     companyName: string 
-    plan: 'basic' | 'pro' | 'enterprise'
+    planId: number
     ownerName: string
     ownerEmail: string
     ownerPassword: string

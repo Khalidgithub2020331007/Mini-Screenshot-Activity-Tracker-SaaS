@@ -31,7 +31,6 @@ export default class ScreenshotsSchema extends BaseSchema {
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now()).index()
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
 
-      // Composite indexes for fast queries (Hubstaff-like)
       table.index(['user_id', 'created_at'], 'idx_user_created_at')
       table.index(['company_id', 'created_at'], 'idx_company_created_at')
       table.index(['company_id', 'user_id', 'created_at'], 'idx_company_user_created_at')

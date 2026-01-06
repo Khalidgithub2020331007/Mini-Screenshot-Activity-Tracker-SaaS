@@ -48,6 +48,5 @@ export default class ScreenshotService {
       .where('company_id', companyId)
       .where('user_id', userId)
       .whereRaw('DATE(created_at) = ?', [date])
-      .orderBy('created_at', 'asc')
   }
 }

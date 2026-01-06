@@ -1,177 +1,216 @@
-
-
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CreateCompanyPayload } from '../types';
 import api from '../api/axios';
 
+type Plan = {
+  id: number;
+  name: string;
+  price: number;
+  numberOfPerson: number;
+};
 
 type Props = {
   goToPage?: (page: 'login' | 'companyRegister') => void;
 };
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_REGEX =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
 const CompanyRegister = ({ goToPage }: Props) => {
   const [company, setCompany] = useState<CreateCompanyPayload>({
-    companyName:'',
-    plan: 'basic',
+    companyName: '',
+    planId: 0,
     ownerName: '',
-    ownerEmail:'',
-    ownerPassword: ''
+    ownerEmail: '',
+    ownerPassword: '',
   });
 
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const handleEmailChange = (value: string) => {
-    setCompany(prev => ({ ...prev, ownerEmail: value }));
-    // console.log('Email changed:', value);  
-    if (!emailRegex.test(value)) {
-      setEmailError('Invalid email format');
-    } else {
-      setEmailError('');
-    }
-  };
-
-
-
-  const handlePasswordChange = (value: string) => {
-    setCompany(prev => ({ ...prev, ownerPassword: value }));
-    if (!PASSWORD_REGEX.test(value)) {
-      setPasswordError(
-        'Password must be 8+ chars, include uppercase, lowercase, number & special character'
-      );
-    } else {
-      setPasswordError('');
-    }
-  };
-
-  const canSubmit =
-    company.companyName.trim() !== '' &&
-    company.ownerName.trim() !== '' &&
-    company.ownerEmail.trim() !== '' &&
-    company.ownerPassword.trim() !== '' &&
-    emailError === '' &&
-    passwordError === '';
-
-  const [errors, setErrors] = useState<Partial<Record<keyof CreateCompanyPayload, string>>>({});
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement|HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    console.log(name, value);
-    setCompany(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+  /* ---------------- FETCH PLANS ---------------- */
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await api.get('/plans_list');
+        setPlans(res.data);
+      } catch (err) {
+        console.error('Failed to fetch plans', err);
+      }
+    };
+    fetchPlans();
+  }, []);
 
-    setErrors(prev => ({ ...prev, [name]: undefined }));
+  /* ---------------- HANDLERS ---------------- */
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+
+    setCompany((prev) => ({
+      ...prev,
+      [name]: name === 'planId' ? Number(value) : value,
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailChange = (value: string) => {
+    setCompany((prev) => ({ ...prev, ownerEmail: value }));
+    setEmailError(emailRegex.test(value) ? '' : 'Invalid email address');
+  };
 
+  const handlePasswordChange = (value: string) => {
+    setCompany((prev) => ({ ...prev, ownerPassword: value }));
+    setPasswordError(
+      PASSWORD_REGEX.test(value)
+        ? ''
+        : 'Min 8 chars, upper, lower, number & symbol'
+    );
+  };
+
+  /* ---------------- SUBMIT ---------------- */
+  const canSubmit =
+    company.companyName &&
+    company.ownerName &&
+    company.ownerEmail &&
+    company.ownerPassword &&
+    company.planId > 0 &&
+    !emailError &&
+    !passwordError;
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    setErrors({});
-
+    console.log(company)
 
     try {
       setLoading(true);
-       await api.post('/create-company', company);
-      if (goToPage) goToPage('login');
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        alert(err.message);
-      } else {
-        alert('Network error or server is down');
-      }
+      await api.post('/create-company', company);
+  
+      goToPage?.('login');
+    } catch (err) {
+      console.log(err)
+      alert('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  /* ---------------- UI ---------------- */
   return (
-    <div className="flex items-center justify-center min-h-[70vh]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md space-y-6"
+        className="bg-white w-full max-w-lg rounded-2xl shadow-xl p-8 space-y-6"
       >
-        <h2 className="text-2xl font-bold text-center text-gray-800">
-          Company Registration
+        <h2 className="text-3xl font-bold text-center text-gray-800">
+          Register Your Company
         </h2>
 
-        <div className="flex flex-col space-y-4">
+        {/* Company */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Company Name
+          </label>
           <input
             name="companyName"
-            placeholder="Company Name"
             value={company.companyName}
             onChange={handleChange}
-            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            className="mt-1 w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-500"
+            placeholder="Acme Inc."
           />
-          {errors.companyName && <p className="text-red-500 text-sm">{errors.companyName}</p>}
+        </div>
 
-       
+        {/* Owner */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Owner Name
+          </label>
           <input
             name="ownerName"
-            placeholder="Owner Name"
             value={company.ownerName}
             onChange={handleChange}
-            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            className="mt-1 w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-500"
+            placeholder="John Doe"
           />
-          {errors.ownerName && <p className="text-red-500 text-sm">{errors.ownerName}</p>}
+        </div>
 
+        {/* Email */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Owner Email
+          </label>
           <input
-            name="ownerEmail"
             type="email"
-            placeholder="Owner Email"
             value={company.ownerEmail}
-            onChange={e=> handleEmailChange(e.target.value)}
-            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            onChange={(e) => handleEmailChange(e.target.value)}
+            className="mt-1 w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-500"
+            placeholder="john@company.com"
           />
-          {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+          {emailError && (
+            <p className="text-xs text-red-500 mt-1">{emailError}</p>
+          )}
+        </div>
 
+        {/* Password */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Password
+          </label>
           <input
-            name="ownerPassword"
             type="password"
-            placeholder="Owner Password"
             value={company.ownerPassword}
-            onChange={e=>handlePasswordChange(e.target.value)}
-            className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            onChange={(e) => handlePasswordChange(e.target.value)}
+            className="mt-1 w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-500"
+            placeholder="••••••••"
           />
-          {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+          {passwordError && (
+            <p className="text-xs text-red-500 mt-1">{passwordError}</p>
+          )}
+        </div>
+
+        {/* Plans */}
+        <div>
+          <label className="text-sm font-medium text-gray-600">
+            Choose Plan
+          </label>
           <select
-            name="plan"
-            value={company.plan}
+            name="planId"
+            value={company.planId}
             onChange={handleChange}
-            className="border rounded-lg p-3"
+            className="mt-1 w-full rounded-lg border p-3 focus:ring-2 focus:ring-blue-500"
           >
-            <option value="basic">Basic($5 2seat/month)</option>
-            <option value="pro">Pro($10 5seat/month)</option>
-            <option value="enterprise">Enterprise($20 10seat/month)</option>
+            <option value={0}>Select a plan</option>
+            {plans.map((plan) => (
+              <option key={plan.id} value={plan.id}>
+                {plan.name} — ${plan.price} / month ({plan.numberOfPerson} seats)
+              </option>
+            ))}
           </select>
         </div>
 
-
+        {/* Submit */}
         <button
           type="submit"
           disabled={!canSubmit}
-          className={`w-full p-3 rounded text-white ${
+          className={`w-full py-3 rounded-xl font-semibold text-white transition ${
             canSubmit
-              ? 'bg-blue-500 hover:bg-blue-600' 
+              ? 'bg-blue-600 hover:bg-blue-700'
               : 'bg-gray-400 cursor-not-allowed'
           }`}
         >
-          {loading ? 'Registering...' : 'Register Company'}
+          {loading ? 'Creating Account...' : 'Create Company'}
         </button>
 
         {goToPage && (
-          <div className="flex justify-between text-sm text-blue-500 mt-4">
-            
-            <span className="cursor-pointer hover:underline" onClick={() => goToPage('login')}>
-              Go to User Login
-            </span>
-          </div>
+          <p
+            onClick={() => goToPage('login')}
+            className="text-center text-sm text-blue-600 hover:underline cursor-pointer"
+          >
+            Already have an account? Login
+          </p>
         )}
       </form>
     </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import type { User } from '../../types';
 import ScreenShot_Show from './ScreenShot_Show';
@@ -23,7 +23,7 @@ const EmployeeListShow = () => {
   const [loading, setLoading] = useState(false);
   const [, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(5);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 

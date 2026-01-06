@@ -4,17 +4,17 @@ import cloudinary from '#config/cloudinary'
 import { inject } from '@adonisjs/core'
 import { groupScreenshots } from '../../utils/group_screenshots.js'
 import { adminQueryValidator, employeeQueryValidator } from './screenshot.validator.js'
+import User from '../../models/user.js'
 @inject()
 export default class ScreenshotController {
   constructor(private screenshotService: ScreenshotService) {}
   public async uploadScreenshotController({ request, response, auth }: HttpContext) {
-    const user = auth.user
+    const user = auth.user as User
 
     if (!user) {
       return response.unauthorized({ error: 'Unauthorized' })
     }
 
-    // ✅ Proper file handling (DO NOT use request.all())
     const file = request.file('file', {
       size: '5mb',
       extnames: ['jpg', 'jpeg', 'png'],
@@ -51,7 +51,7 @@ export default class ScreenshotController {
   }
 
   public async ownerQueryController({ request, response, auth }: HttpContext) {
-    const user = auth.user
+    const user = auth.user as User
     if (user!.role !== 'owner') {
       return response.forbidden({ error: 'Forbidden' })
     }
@@ -67,8 +67,8 @@ export default class ScreenshotController {
 
       const formattedScreenshots = screenshots.map((s) => {
         return {
-          ...s.serialize(), // converts model to plain object
-          createdAt: s.createdAt.toISO(), // Luxon DateTime to ISO string
+          ...s.serialize(),
+          createdAt: s.createdAt.toISO(),
           updatedAt: s.updatedAt.toISO(),
         }
       })
@@ -82,10 +82,8 @@ export default class ScreenshotController {
   }
 
   public async employeeQueryController({ request, response, auth }: HttpContext) {
-    const user = auth.user
-    if (user!.role !== 'employee') {
-      return response.forbidden({ error: 'Forbidden' })
-    }
+    const user = auth.user as User
+
     const { date, groupBy } = await request.validateUsing(employeeQueryValidator)
     try {
       const screenshot = await this.screenshotService.employeeQueryService({
@@ -93,8 +91,17 @@ export default class ScreenshotController {
         userId: user!.id,
         date: date ?? new Date().toISOString().split('T')[0],
       })
-      const grouped = groupScreenshots(screenshot, groupBy ?? '10min')
-      return grouped
+
+      const formattedScreenshots = screenshot.map((s) => {
+        return {
+          ...s.serialize(),
+          createdAt: s.createdAt.toISO(),
+          updatedAt: s.updatedAt.toISO(),
+        }
+      })
+
+      const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
+      return JSON.stringify(grouped)
     } catch (error) {
       console.log(error)
       return response.badRequest({ error: error.message })

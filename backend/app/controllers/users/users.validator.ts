@@ -14,7 +14,7 @@ export const companyCreateValidator = vine.compile(
     ownerEmail: vine.string().trim().email(),
     ownerPassword: vine.string().trim().minLength(8),
     companyName: vine.string().trim().minLength(3),
-    plan: vine.enum(['basic', 'pro', 'enterprise']),
+    planId: vine.number().min(0).max(10000),
   })
 )
 export const employeeListValidator = vine.compile(
@@ -47,5 +47,22 @@ companyCreateValidator.messagesProvider = new SimpleMessagesProvider({
   any: 'the value of {{field}} is not valid',
   minLength: 'the value of {{field}} must be at least {{minLength}} characters long',
   length: 'the value of {{field}} must be {{length}} characters long',
+  email: 'the value of {{field}} must be a valid email',
+})
+
+export const planCreateValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(3),
+    price: vine.number().min(0).max(10000),
+    number_of_person: vine.number().min(0).max(100),
+  })
+)
+planCreateValidator.messagesProvider = new SimpleMessagesProvider({
+  string: 'the value of {{field}} must be a required string',
+  number: 'the value of {{field}} must be a number',
+  enum: 'the value of {{field}} must be one of {{enum}}',
+  any: 'the value of {{field}} is not valid',
+  minLength: 'the value of {{field}} must be at least {{minLength}} characters long',
+  maxLength: 'the value of {{field}} must be at most {{maxLength}} characters long',
   email: 'the value of {{field}} must be a valid email',
 })

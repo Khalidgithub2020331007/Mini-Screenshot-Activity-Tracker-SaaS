@@ -17,7 +17,7 @@ export default class UsersSchema extends BaseSchema {
         .references('id')
         .inTable('companies')
         .onDelete('CASCADE')
-        .index() // For fast employee lookup
+        .index()
 
       table.enum('role', ['owner', 'employee']).notNullable()
 

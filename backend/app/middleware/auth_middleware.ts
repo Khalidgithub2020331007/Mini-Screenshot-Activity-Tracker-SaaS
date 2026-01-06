@@ -19,6 +19,11 @@ export default class AuthMiddleware {
       guards?: (keyof Authenticators)[]
     } = {}
   ) {
+    const token = ctx.request.cookie('token')
+    if (!token) {
+      return ctx.response.unauthorized({ message: 'Unauthorized' })
+    }
+    ctx.request.request.headers.authorization = `Bearer ${token}`
     await ctx.auth.authenticateUsing(options.guards, { loginRoute: this.redirectTo })
     return next()
   }

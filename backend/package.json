@@ -16,7 +16,7 @@
   "imports": {
     "#controllers/*": "./app/controllers/*.js",
     "#exceptions/*": "./app/exceptions/*.js",
-    "#models/*": "./app/modelsStrongPassword123!/*.js",
+    "#models/*": "./app/models/*.js",
     "#mails/*": "./app/mails/*.js",
     "#services/*": "./app/services/*.js",
     "#listeners/*": "./app/listeners/*.js",
@@ -47,7 +47,7 @@
     "hot-hook": "^0.4.0",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.5.3",
-    "ts-node-maintained": "^10.9.6",
+    "ts-node-maintained": "^10.9.5",
     "typescript": "~5.8"
   },
   "dependencies": {
@@ -55,10 +55,11 @@
     "@adonisjs/core": "^6.18.0",
     "@adonisjs/cors": "^2.2.1",
     "@adonisjs/lucid": "^21.6.1",
-    "@maximemrf/adonisjs-jwt": "^0.6.1",
+    "@adonisjs/session": "^7.7.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@vinejs/vine": "^3.0.1",
-    "adonis5-jwt": "^1.1.7",
     "cloudinary": "^2.8.0",
+    "jsonwebtoken": "^9.0.3",
     "luxon": "^3.7.2",
     "mysql2": "^3.16.0",
     "reflect-metadata": "^0.2.2"
@@ -69,12 +70,5 @@
       "./app/middleware/*.ts"
     ]
   },
-  "prettier": "@adonisjs/prettier-config",
-  "main": "ace.js",
-  "directories": {
-    "test": "tests"
-  },
-  "keywords": [],
-  "author": "",
-  "description": ""
+  "prettier": "@adonisjs/prettier-config"
 }

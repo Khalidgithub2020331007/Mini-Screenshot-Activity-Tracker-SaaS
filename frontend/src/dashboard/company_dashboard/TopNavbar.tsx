@@ -14,15 +14,19 @@ const TopNavbar: React.FC<Props> = ({ onLogout,name }) => {
     } catch (err: unknown) {
       console.error('Logout failed:', err);
     } finally {
-      localStorage.removeItem('token'); 
+      localStorage.removeItem('user'); 
+      localStorage.removeItem('owner_active_page');
+      delete api.defaults.headers.common['Authorization'];
       onLogout();
     }
+    const res = api.post('/checklogin')
+    console.log(res)
   };
     
 
   return (
     <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
-          <div className="text-sm">{name}</div>
+          <div className="text-sm">Compnay Owner: <b>{name}</b></div>
           
       <button
         onClick={handleLogout}

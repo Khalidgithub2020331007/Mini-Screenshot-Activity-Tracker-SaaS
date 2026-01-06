@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import api from '../../api/axios';
-import type { CreateEmployeePayload } from '../../types'
+import type { CreateEmployeePayload } from '../../types';
 
 type Props = {
-  onEmployeeCreated?: () => void; // Optional callback if you want to refresh employee list
+  onEmployeeCreated?: () => void;
 };
 
 const EmployeeRegister = ({ onEmployeeCreated }: Props) => {

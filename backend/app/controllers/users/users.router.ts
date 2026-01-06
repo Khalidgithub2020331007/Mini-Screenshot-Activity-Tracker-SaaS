@@ -1,17 +1,20 @@
+// users.router.ts
+
 import router from '@adonisjs/core/services/router'
 import { middleware } from '#start/kernel'
 
-const UsersController = () => import('./users.controller.js')
+const UsersController = () => import('./users.contorller.js')
 
-router
-  .post('/create-employee', [UsersController, 'createUserController'])
-  .use(middleware.auth({ guards: ['jwt'] }))
 router.post('/login', [UsersController, 'loginController'])
+router.post('/plan-create', [UsersController, 'planCreateController'])
+router.get('/plans_list', [UsersController, 'planListController'])
 router.post('/create-company', [UsersController, 'createCompanyController'])
-router.post('/logout', [UsersController, 'logoutController'])
 router
-  .post('/checklogin', [UsersController, 'checklogin'])
-  .use(middleware.auth({ guards: ['jwt'] }))
-router
-  .get('/employees_list', [UsersController, 'employeeList'])
-  .use(middleware.auth({ guards: ['jwt'] }))
+  .group(() => {
+    router.post('/create-employee', [UsersController, 'createUserController'])
+
+    router.post('/logout', [UsersController, 'logoutController'])
+    router.post('/checklogin', [UsersController, 'checklogin'])
+    router.get('/employees_list', [UsersController, 'employeeList'])
+  })
+  .use(middleware.auth())
