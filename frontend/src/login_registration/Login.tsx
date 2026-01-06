@@ -45,6 +45,7 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
 
     try {
       const res = await api.post('/login', { email, password });

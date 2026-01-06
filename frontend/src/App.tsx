@@ -18,7 +18,6 @@ function App() {
       try {
         const res = await api.post('/checklogin', {
         })
-        console.log(res)
 
         if (res.status === 200) {
           if (res.data.role === 'owner') {
@@ -27,8 +26,7 @@ function App() {
             setPage('employeeDashboard')
           }
         }
-      } catch (error) {
-        console.log(error)
+      } catch  {
         setPage('login')
       } finally {
         setLoading(false)

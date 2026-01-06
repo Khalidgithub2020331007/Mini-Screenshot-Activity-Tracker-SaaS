@@ -30,23 +30,33 @@ const CompanyRegister = ({ goToPage }: Props) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
+
+
     const fetchPlans = async () => {
+      setLoading(true);
       try {
         const res = await api.get('/plans_list');
         setPlans(res.data);
       } catch (err) {
         console.error('Failed to fetch plans', err);
       }
+      finally {
+        setLoading(false);
+      }
     };
     fetchPlans();
   }, []);
 
   const handleChange = (
+    
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    
     const { name, value } = e.target;
+    setLoginError('');
 
     setCompany((prev) => ({
       ...prev,
@@ -55,11 +65,13 @@ const CompanyRegister = ({ goToPage }: Props) => {
   };
 
   const handleEmailChange = (value: string) => {
+    setLoginError('');
     setCompany((prev) => ({ ...prev, ownerEmail: value }));
     setEmailError(emailRegex.test(value) ? '' : 'Invalid email address');
   };
 
   const handlePasswordChange = (value: string) => {
+    setLoginError('');
     setCompany((prev) => ({ ...prev, ownerPassword: value }));
     setPasswordError(
       PASSWORD_REGEX.test(value)
@@ -68,7 +80,6 @@ const CompanyRegister = ({ goToPage }: Props) => {
     );
   };
 
-  /* ---------------- SUBMIT ---------------- */
   const canSubmit =
     company.companyName &&
     company.ownerName &&
@@ -76,7 +87,7 @@ const CompanyRegister = ({ goToPage }: Props) => {
     company.ownerPassword &&
     company.planId > 0 &&
     !emailError &&
-    !passwordError;
+    !passwordError && loginError === '';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,12 +102,12 @@ const CompanyRegister = ({ goToPage }: Props) => {
     } catch (err) {
       console.log(err)
       alert('Something went wrong. Please try again.');
+      setLoginError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- UI ---------------- */
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <form
