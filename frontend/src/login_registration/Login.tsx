@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import api from '../api/axios';
 
@@ -19,10 +18,11 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [loginError, setLoginError] = useState('');
 
-  // 🔹 Email validation
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setLoginError('');
 
     if (!emailRegex.test(value)) {
       setEmailError('Invalid email format');
@@ -31,10 +31,9 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
     }
   };
 
-  // 🔹 Password validation
   const handlePasswordChange = (value: string) => {
     setPassword(value);
-    // console.log('Password changed:', value);
+    setLoginError('');
 
     if (!strongPasswordRegex.test(value)) {
       setPasswordError(
@@ -49,19 +48,16 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
     email !== '' &&
     password !== '' &&
     emailError === '' &&
-    passwordError === '';
+    passwordError === '' &&
+    loginError === '';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const res = await api.post('/login', { email, password });
-
-      console.log(res)
       const backendUser = res.data.user;
-
       setname(backendUser.name);
-      // localStorage.setItem('user', JSON.stringify(backendUser));
 
       if (goToPage) {
         goToPage(
@@ -71,7 +67,7 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
         );
       }
     } catch {
-      alert('Login failed');
+      setLoginError('Invalid email or password');
     }
   };
 
@@ -82,7 +78,6 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
     >
       <h2 className="text-2xl font-bold text-center">User Login</h2>
 
-      {/* Email */}
       <div>
         <input
           type="email"
@@ -98,7 +93,6 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
         )}
       </div>
 
-      {/* Password */}
       <div>
         <input
           type="password"
@@ -114,7 +108,10 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
         )}
       </div>
 
-      {/* Submit */}
+      {loginError && (
+        <p className="text-red-500 text-sm text-center">{loginError}</p>
+      )}
+
       <button
         type="submit"
         disabled={!canSubmit}
@@ -129,11 +126,12 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
 
       {goToPage && (
         <div className="flex justify-between text-blue-500 text-sm mt-2">
-          
-          <span className="cursor-pointer" onClick={() => goToPage('companyRegister')}>
+          <span
+            className="cursor-pointer"
+            onClick={() => goToPage('companyRegister')}
+          >
             Go to Company Register
           </span>
-         
         </div>
       )}
     </form>
