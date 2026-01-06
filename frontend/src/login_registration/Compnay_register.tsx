@@ -31,7 +31,6 @@ const CompanyRegister = ({ goToPage }: Props) => {
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  /* ---------------- FETCH PLANS ---------------- */
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -44,7 +43,6 @@ const CompanyRegister = ({ goToPage }: Props) => {
     fetchPlans();
   }, []);
 
-  /* ---------------- HANDLERS ---------------- */
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {

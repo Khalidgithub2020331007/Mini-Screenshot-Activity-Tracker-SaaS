@@ -72,7 +72,7 @@ const EmployeeListShow = () => {
 
     setDeleting(true);
     try {
-      await api.post('/delete-employee', { employeeId: deleteUserId });
+      await api.delete('/delete-employee', { params: { employeeId: deleteUserId } });
       setDeleteUserId(null);
       fetchEmployees();
     } catch {

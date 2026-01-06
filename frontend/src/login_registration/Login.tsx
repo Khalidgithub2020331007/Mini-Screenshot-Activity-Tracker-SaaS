@@ -9,20 +9,19 @@ type LoginProps = {
 };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const strongPasswordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [disableButton, setDisableButton] = useState(false);
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
     setLoginError('');
+    setDisableButton(false);
 
     if (!emailRegex.test(value)) {
       setEmailError('Invalid email format');
@@ -34,22 +33,15 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
   const handlePasswordChange = (value: string) => {
     setPassword(value);
     setLoginError('');
-
-    if (!strongPasswordRegex.test(value)) {
-      setPasswordError(
-        'Password must be 8+ chars, include uppercase, lowercase, number & special character'
-      );
-    } else {
-      setPasswordError('');
-    }
+    setDisableButton(false);
   };
 
   const canSubmit =
     email !== '' &&
     password !== '' &&
     emailError === '' &&
-    passwordError === '' &&
-    loginError === '';
+    loginError === '' &&
+    !disableButton;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,44 +60,44 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
       }
     } catch {
       setLoginError('Invalid email or password');
+      setDisableButton(true);
     }
   };
 
   return (
     <form
       onSubmit={handleLogin}
-      className="max-w-md mx-auto p-4 space-y-4 bg-white shadow-lg rounded-lg"
+      className="max-w-md mx-auto p-8 space-y-6 bg-white shadow-xl rounded-2xl"
     >
-      <h2 className="text-2xl font-bold text-center">User Login</h2>
+      <h2 className="text-3xl font-extrabold text-center text-gray-800">
+        User Login
+      </h2>
 
-      <div>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={e => handleEmailChange(e.target.value)}
-          className={`border p-2 w-full rounded ${
-            emailError ? 'border-red-500' : 'border-gray-300'
-          }`}
-        />
-        {emailError && (
-          <p className="text-red-500 text-sm mt-1">{emailError}</p>
-        )}
-      </div>
+      <div className="space-y-4">
+        <div>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => handleEmailChange(e.target.value)}
+            className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 transition ${
+              emailError ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {emailError && (
+            <p className="text-red-500 text-sm mt-1">{emailError}</p>
+          )}
+        </div>
 
-      <div>
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={e => handlePasswordChange(e.target.value)}
-          className={`border p-2 w-full rounded ${
-            passwordError ? 'border-red-500' : 'border-gray-300'
-          }`}
-        />
-        {passwordError && (
-          <p className="text-red-500 text-sm mt-1">{passwordError}</p>
-        )}
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => handlePasswordChange(e.target.value)}
+            className={`border p-3 w-full rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 transition`}
+          />
+        </div>
       </div>
 
       {loginError && (
@@ -115,7 +107,7 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
       <button
         type="submit"
         disabled={!canSubmit}
-        className={`w-full p-3 rounded text-white ${
+        className={`w-full p-3 rounded-lg text-white font-semibold transition ${
           canSubmit
             ? 'bg-purple-500 hover:bg-purple-600'
             : 'bg-gray-400 cursor-not-allowed'
@@ -125,9 +117,9 @@ const Login: React.FC<LoginProps> = ({ setname, goToPage }) => {
       </button>
 
       {goToPage && (
-        <div className="flex justify-between text-blue-500 text-sm mt-2">
+        <div className="flex justify-center text-sm mt-4">
           <span
-            className="cursor-pointer"
+            className="text-blue-500 cursor-pointer hover:underline"
             onClick={() => goToPage('companyRegister')}
           >
             Go to Company Register
