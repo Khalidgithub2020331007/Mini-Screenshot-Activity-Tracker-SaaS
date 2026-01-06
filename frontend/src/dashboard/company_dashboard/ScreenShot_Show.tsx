@@ -33,7 +33,10 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImage, setModalImage] = useState<Screenshot | null>(null);
 
-  const fetchScreenshots = async () => {
+
+
+  useEffect(() => {
+      const fetchScreenshots = async () => {
     if (!userId) return;
     setLoading(true);
 
@@ -90,8 +93,6 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
     fetchScreenshots();
   }, [userId, date, groupBy]);
 
@@ -114,7 +115,6 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
         Back
       </button>
 
-      {/* Controls */}
       <div className="flex items-center gap-4 mb-4">
         <p className="font-semibold text-gray-700">Select Date:</p>
         <input
@@ -132,11 +132,8 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
         >
           <option value="5min">5 Minutes</option>
           <option value="10min">10 Minutes</option>
-          {/* <option value="20min">20 Minutes</option> */}
         </select>
       </div>
-
-      {/* Content */}
       {loading ? (
         <p className="text-center py-10 text-gray-500">Loading screenshots...</p>
       ) : groupedScreenshots.length === 0 ? (
@@ -179,7 +176,7 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
                       ))
                     ) : (
                       <div className="flex-shrink-0 w-32 h-24 flex items-center justify-center border rounded text-gray-400 text-xs">
-                        No Image
+                       
                       </div>
                     )}
                   </div>

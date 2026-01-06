@@ -124,6 +124,7 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
             canSubmit ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-400 cursor-not-allowed'
           }`}
         >
+
           {loading ? 'Creating...' : 'Create Employee'}
         </button>
       </form>

@@ -76,7 +76,7 @@ export default class UserService {
   public async userListService(user: User, page?: number, limit?: number, name?: string) {
     try {
       const query = User.query()
-        .select('id', 'name')
+        .select('id', 'name', 'email')
         .where('companyId', user.companyId)
         .where('role', 'employee')
         .where('name', 'like', `%${name}%`)
