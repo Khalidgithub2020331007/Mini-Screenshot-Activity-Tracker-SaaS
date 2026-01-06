@@ -17,6 +17,7 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<CreateEmployeePayload>>({});
+  const [employeeRegisterError, setEmployeeRegisterError] = useState('');
 
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PASSWORD_REGEX =
@@ -27,6 +28,7 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
     setEmployee((prev) => ({ ...prev, [name]: value }));
 
     setErrors((prev) => ({ ...prev, [name]: undefined }));
+    setEmployeeRegisterError('');
 
     if (name === 'email') {
       setEmailError(EMAIL_REGEX.test(value) ? '' : 'Invalid email format');
@@ -45,7 +47,7 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
     employee.email.trim() &&
     employee.password.trim() &&
     !emailError &&
-    !passwordError;
+    !passwordError && employeeRegisterError === ''&& !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,17 +58,15 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
       await api.post('/create-employee', employee);
       alert('Employee created successfully!');
 
-      // Reset form
       setEmployee({ name: '', email: '', password: '' });
       setErrors({});
       setEmailError('');
       setPasswordError('');
 
-      // Optional callback to refresh employee list
       onEmployeeCreated?.();
-    } catch (err:unknown) {
+    } catch (err) {
       console.error('Error:', err);
-      // alert(err?.response?.data?.error || 'Failed to create employee');
+      setEmployeeRegisterError('Failed to create employee, may be email already used');
     } finally {
       setLoading(false);
     }
@@ -111,6 +111,10 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
             className="border border-gray-300 rounded-lg p-3 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
           />
           {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+          {employeeRegisterError && (
+            <p className="text-red-500 text-sm text-center">{employeeRegisterError}</p>
+          )
+          }
         </div>
 
         <button

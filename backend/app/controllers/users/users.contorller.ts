@@ -67,7 +67,7 @@ export default class UsersController {
         },
       })
     } catch (error: any) {
-      return response.badRequest({ error: error.message })
+      return response.badRequest({ 'fail to create user': error.message })
     }
   }
   public async loginController({ request, response, auth }: HttpContext) {

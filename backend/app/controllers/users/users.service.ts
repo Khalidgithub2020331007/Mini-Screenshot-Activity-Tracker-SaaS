@@ -24,6 +24,10 @@ export default class UserService {
     if (!company) {
       throw new Error('Company not found')
     }
+    const existingUser = await User.findBy('email', email)
+    if (existingUser) {
+      throw new Error('User already exists')
+    }
 
     const user = await User.create({
       name: name,
