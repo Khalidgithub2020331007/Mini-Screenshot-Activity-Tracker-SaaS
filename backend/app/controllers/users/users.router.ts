@@ -16,5 +16,6 @@ router
     router.post('/logout', [UsersController, 'logoutController'])
     router.post('/checklogin', [UsersController, 'checklogin'])
     router.get('/employees_list', [UsersController, 'employeeList'])
+    router.post('/delete-employee', [UsersController, 'deleteEmployeeController'])
   })
   .use(middleware.auth())

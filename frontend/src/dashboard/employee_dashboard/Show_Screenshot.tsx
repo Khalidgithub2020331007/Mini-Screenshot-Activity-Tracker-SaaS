@@ -31,7 +31,7 @@ const Show_Screenshot: React.FC = () => {
   const fetchScreenshots = async () => {
     setLoading(true);
     try {
-      const res = await api.post('/employee-query', { date, groupBy });
+      const res = await api.get('/employee-query', { params:{date,groupBy}, });
       const data = res.data?.[date];
 
       if (!data) {

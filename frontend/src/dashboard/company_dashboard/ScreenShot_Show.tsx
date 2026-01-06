@@ -38,7 +38,10 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
     setLoading(true);
 
     try {
-      const res = await api.post('/owner-query', { userId, date, groupBy });
+      const res = await api.get('/owner-query', {
+        params: { userId, date, groupBy },
+      });
+
       const data = res.data?.[date];
 
       if (!data) {

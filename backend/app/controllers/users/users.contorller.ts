@@ -7,6 +7,7 @@ import {
   planCreateValidator,
 } from './users.validator.js'
 import User from '../../models/user.js'
+import { deleteEmployeeValidator } from '#controllers/screenshot/screenshot.validator'
 
 export default class UsersController {
   private userService = new UserService()
@@ -143,6 +144,24 @@ export default class UsersController {
     try {
       const plans = await this.userService.getPlanService()
       return response.ok(plans)
+    } catch (error) {
+      return response.badRequest({ error: error.message })
+    }
+  }
+  public async deleteEmployeeController({ request, response, auth }: HttpContext) {
+    const user = auth.user
+    if (!user) {
+      return response.unauthorized({ error: 'Unauthorized' })
+    }
+    if (user.role !== 'owner') {
+      return response.forbidden({ error: 'Forbidden' })
+    }
+
+    const { employeeId } = await request.validateUsing(deleteEmployeeValidator)
+
+    try {
+      await this.userService.deleteEmployeeService(user, employeeId)
+      return response.ok({ message: 'Employee deleted successfully' })
     } catch (error) {
       return response.badRequest({ error: error.message })
     }

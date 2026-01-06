@@ -52,3 +52,12 @@ employeeQueryValidator.messagesProvider = new SimpleMessagesProvider({
   maxLength: 'the value of {{field}} must be at most {{maxLength}} characters long',
   email: 'the value of {{field}} must be a valid email',
 })
+
+export const deleteEmployeeValidator = vine.compile(
+  vine.object({
+    employeeId: vine.number(),
+  })
+)
+deleteEmployeeValidator.messagesProvider = new SimpleMessagesProvider({
+  number: 'the value of {{field}} must be a number',
+})
