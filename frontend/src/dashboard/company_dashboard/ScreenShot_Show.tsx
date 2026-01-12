@@ -7,10 +7,11 @@ export type Screenshot = {
   url: string;
   type: string;
   created_at: string;
+  serial?: number;
 };
 
 type Interval = {
-  interval: string; // e.g., "04:10"
+  interval: string;
   screenshots: Screenshot[];
 };
 
@@ -28,83 +29,88 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
   const [groupedScreenshots, setGroupedScreenshots] = useState<HourData[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [groupBy, setGroupBy] = useState<'5min' | '10min'|'20min'>('10min');
-
+  const [groupBy, setGroupBy] = useState<'5min' | '10min' | '20min'>('10min');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalImage, setModalImage] = useState<Screenshot | null>(null);
-
-
+  const [totalScreenshots, setTotalScreenshots] = useState(0);
 
   useEffect(() => {
-      const fetchScreenshots = async () => {
-    if (!userId) return;
-    setLoading(true);
+    const fetchScreenshots = async () => {
+      if (!userId) return;
+      setLoading(true);
+      // console.log('Fetching screenshots for userId:', userId, 'date:', date, 'groupBy:', groupBy);
 
-    try {
-      const res = await api.get('/owner-query', {
-        params: { userId, date, groupBy },
-      });
+      try {
+        const res = await api.get('/owner-query', { params: { userId, date, groupBy } });
+        console.log('Raw backend response:', res.data);
 
-      const data = res.data?.[date];
+        const groupedData = res.data[date] || {};
+        const total = Object.values(groupedData).flat().length;
+        setTotalScreenshots(total);
 
-      if (!data) {
+        // console.log('Total screenshots from backend:', total);
+        // console.log('Grouped data for date:', groupedData);
+
+        let serialNumberTemp = 1;
+        const grouped: HourData[] = [];
+
+        Object.entries(groupedData).forEach(([timeKey, shots]: [string, any[]]) => {
+          // console.log('Processing interval:', timeKey, 'shots:', shots.length);
+
+          const hour = parseInt(timeKey.split(':')[0], 10);
+          const intervalObj: Interval = {
+            interval: timeKey,
+            screenshots: shots.map((shot: any) => ({
+              id: shot.id,
+              name: shot.name,
+              url: shot.path, // backend uses 'path' for image URL
+              type: shot.type,
+              created_at: shot.createdAt,
+              serial: serialNumberTemp++,
+            })),
+          };
+
+          const existingHour = grouped.find((h) => h.hour === hour);
+          if (existingHour) {
+            existingHour.intervals.push(intervalObj);
+          } else {
+            grouped.push({ hour, intervals: [intervalObj] });
+          }
+        });
+
+        grouped.sort((a, b) => a.hour - b.hour);
+        grouped.forEach((h) =>
+          h.intervals.sort(
+            (a, b) => parseInt(a.interval.split(':')[1], 10) - parseInt(b.interval.split(':')[1], 10)
+          )
+        );
+
+        // console.log('Final groupedScreenshots array:', grouped);
+        setGroupedScreenshots(grouped);
+      } catch (err) {
+        console.error('Failed to fetch screenshots', err);
         setGroupedScreenshots([]);
-        return;
+        setTotalScreenshots(0);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Transform backend data into HourData[]
-      const grouped: HourData[] = [];
-
-      Object.entries(data).forEach(([timeKey, shots]: [string, any[]]) => {
-        const hour = parseInt(timeKey.split(':')[0], 10);
-
-        const intervalObj: Interval = {
-          interval: timeKey,
-          screenshots: shots.map((shot: any) => ({
-            id: shot.id,
-            name: shot.name,
-            url: shot.path,
-            type: shot.type,
-            created_at: shot.createdAt,
-          })),
-        };
-
-        const existingHour = grouped.find((h) => h.hour === hour);
-        if (existingHour) {
-          existingHour.intervals.push(intervalObj);
-        } else {
-          grouped.push({ hour, intervals: [intervalObj] });
-        }
-      });
-
-      // Sort hours and intervals
-      grouped.sort((a, b) => a.hour - b.hour);
-      grouped.forEach((h) =>
-        h.intervals.sort(
-          (a, b) => parseInt(a.interval.split(':')[1], 10) - parseInt(b.interval.split(':')[1], 10)
-        )
-      );
-
-      setGroupedScreenshots(grouped);
-    } catch (err) {
-      console.error('Failed to fetch screenshots', err);
-      setGroupedScreenshots([]);
-    } finally {
-      setLoading(false);
-    }
-  };
     fetchScreenshots();
   }, [userId, date, groupBy]);
 
   const openModal = (shot: Screenshot) => {
     setModalImage(shot);
     setModalOpen(true);
+    // console.log('Opening modal for screenshot:', shot);
   };
 
   const closeModal = () => {
     setModalOpen(false);
     setModalImage(null);
+    // console.log('Modal closed');
   };
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-[70vh] rounded-lg shadow-md relative">
@@ -115,25 +121,32 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
         Back
       </button>
 
-      <div className="flex items-center gap-4 mb-4">
-        <p className="font-semibold text-gray-700">Select Date:</p>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="border border-gray-300 rounded p-2"
-        />
-
-        <p className="font-semibold text-gray-700">Group By:</p>
-        <select
-          value={groupBy}
-          onChange={(e) => setGroupBy(e.target.value as '5min' | '10min' | '20min')}
-          className="border border-gray-300 rounded p-2"
-        >
-          <option value="5min">5 Minutes</option>
-          <option value="10min">10 Minutes</option>
-        </select>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <p className="font-semibold text-gray-700">Select Date:</p>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="border border-gray-300 rounded p-2"
+          />
+          <p className="font-semibold text-gray-700">Group By:</p>
+          <select
+            value={groupBy}
+            onChange={(e) => setGroupBy(e.target.value as '5min' | '10min' | '20min')}
+            className="border border-gray-300 rounded p-2"
+          >
+            <option value="5min">5 Minutes</option>
+            <option value="10min">10 Minutes</option>
+            <option value="20min">20 Minutes</option>
+          </select>
+        </div>
+        <div className="bg-white shadow px-4 py-2 rounded flex items-center gap-2">
+          <span className="font-bold text-gray-800">Total Screenshots:</span>
+          <span className="text-blue-500 font-semibold text-lg">{totalScreenshots}</span>
+        </div>
       </div>
+
       {loading ? (
         <p className="text-center py-10 text-gray-500">Loading screenshots...</p>
       ) : groupedScreenshots.length === 0 ? (
@@ -142,7 +155,12 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
         groupedScreenshots.map((hourData) => (
           <div key={hourData.hour} className="mb-6">
             <div className="bg-gray-200 px-3 py-2 rounded flex justify-between items-center">
-              <h2 className="font-bold text-gray-700">Hour: {hourData.hour}.00</h2>
+              <h2 className="font-bold text-gray-700">
+                Hour: {hourData.hour}.00
+                <span className="text-sm text-gray-600 ml-2">
+                  ({hourData.intervals.reduce((sum, i) => sum + i.screenshots.length, 0)} shots)
+                </span>
+              </h2>
             </div>
 
             <div className="mt-2 space-y-4">
@@ -157,11 +175,13 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
                           className="flex-shrink-0 w-32 cursor-pointer"
                           onClick={() => openModal(shot)}
                         >
-                          <img
-                            src={shot.url}
-                            alt={shot.name}
-                            className="w-full h-24 object-cover rounded hover:opacity-90 transition"
-                          />
+                          <div className="flex items-center gap-1">
+                            <img
+                              src={shot.url}
+                              alt={shot.name}
+                              className="w-28 h-24 object-cover rounded hover:opacity-90 transition"
+                            />
+                          </div>
                           <p className="text-xs text-gray-500 mt-1 text-center">
                             {new Date(shot.created_at).toLocaleTimeString('en-US', {
                               timeZone: 'Asia/Dhaka',
@@ -171,13 +191,10 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
                               hour12: true,
                             })}
                           </p>
-                          
                         </div>
                       ))
                     ) : (
-                      <div className="flex-shrink-0 w-32 h-24 flex items-center justify-center border rounded text-gray-400 text-xs">
-                       
-                      </div>
+                      <div className="flex-shrink-0 w-32 h-24 flex items-center justify-center border rounded text-gray-400 text-xs"></div>
                     )}
                   </div>
                 </div>
@@ -187,7 +204,6 @@ const ScreenShot_Show = ({ userId, onBack }: Props) => {
         ))
       )}
 
-      {/* Full-screen Modal */}
       {modalOpen && modalImage && (
         <div
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"

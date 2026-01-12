@@ -72,8 +72,11 @@ export default class ScreenshotController {
           updatedAt: s.updatedAt.toISO(),
         }
       })
+      console.log('Raw screenshots count:', formattedScreenshots.length)
+      // console.log(formattedScreenshots)
 
       const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
+      // console.log(grouped)
       return JSON.stringify(grouped)
     } catch (error) {
       // console.log('Error in ownerQueryController:', error)

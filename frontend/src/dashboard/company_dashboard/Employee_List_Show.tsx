@@ -3,7 +3,6 @@ import api from '../../api/axios';
 import type { User } from '../../types';
 import ScreenShot_Show from './ScreenShot_Show';
 import { Trash2 } from 'lucide-react';
-  
 
 type Meta = {
   currentPage: number;
@@ -11,6 +10,7 @@ type Meta = {
   lastPage: number;
   totalPages: number;
   perPage: number;
+  total: number;
 };
 
 const EmployeeListShow = () => {
@@ -21,6 +21,7 @@ const EmployeeListShow = () => {
     lastPage: 1,
     totalPages: 1,
     perPage: 10,
+    total: 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ const EmployeeListShow = () => {
       const responseData = res.data?.data;
       if (!responseData) {
         setEmployees([]);
-        setMeta({ currentPage: 1, firstPage: 1, lastPage: 1, totalPages: 0, perPage: limit });
+        setMeta({ currentPage: 1, firstPage: 1, lastPage: 1, totalPages: 0, perPage: limit, total: 0 });
         return;
       }
 
@@ -54,6 +55,7 @@ const EmployeeListShow = () => {
         lastPage: m.lastPage,
         perPage: m.perPage,
         totalPages: Math.ceil(m.total / m.perPage),
+        total: m.total,
       });
     } catch {
       setEmployees([]);
@@ -88,10 +90,21 @@ const EmployeeListShow = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-[70vh] rounded-lg shadow">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Employee List
-      </h2>
+      {/* Title + Total Employees Badge */}
+      <div className="mb-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-800">
+          Employee List
+        </h2>
 
+        <div className="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-full bg-blue-50 text-blue-700 font-medium shadow-sm">
+          <span className="text-sm uppercase tracking-wide">Total Employees</span>
+          <span className="text-lg font-bold">
+            {meta.total>0?meta.total: 0}
+          </span>
+        </div>
+      </div>
+
+      {/* Search Input */}
       <div className="mb-6 flex justify-center">
         <input
           value={searchQuery}
@@ -104,6 +117,7 @@ const EmployeeListShow = () => {
         />
       </div>
 
+      {/* Employee List */}
       {loading ? (
         <p className="text-center text-gray-500 py-10">Loading...</p>
       ) : employees.length === 0 ? (
@@ -134,6 +148,7 @@ const EmployeeListShow = () => {
         </ul>
       )}
 
+      {/* Pagination */}
       {meta.totalPages > 1 && (
         <div className="flex justify-center mt-8 gap-3">
           <button
@@ -156,6 +171,7 @@ const EmployeeListShow = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {deleteUserId && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">

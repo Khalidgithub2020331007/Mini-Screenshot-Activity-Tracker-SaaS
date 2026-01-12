@@ -7,7 +7,7 @@ const Add_ScreenShots: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>('');
 
-  // Handle file selection
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] ?? null;
     setFile(selectedFile);
@@ -21,7 +21,6 @@ const Add_ScreenShots: React.FC = () => {
     }
   };
 
-  // Upload file
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
 
