@@ -1,124 +1,131 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import api from '@/app/api/axios';
+import React, { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import api from '@/app/api/axios'
 
 export type Screenshot = {
-  id: number;
-  name: string;
-  url: string;
-  type: string;
-  created_at: string;
-};
+  id: number
+  name: string
+  url: string
+  type: string
+  created_at: string
+}
 
 type Interval = {
-  interval: string; // e.g., "04:10"
-  screenshots: Screenshot[];
-};
+  interval: string
+  screenshots: Screenshot[]
+}
 
 type HourData = {
-  hour: number;
-  intervals: Interval[];
-};
+  hour: number
+  intervals: Interval[]
+}
 
-const Show_Screenshot: React.FC = () => {
-  const [groupedScreenshots, setGroupedScreenshots] = useState<HourData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [groupBy, setGroupBy] = useState<'5min' | '10min' | '20min'>('10min');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalImage, setModalImage] = useState<Screenshot | null>(null);
+// ---------------- FETCH FUNCTION ----------------
+const fetchScreenshots = async (
+  date: string,
+  groupBy: '5min' | '10min' | '20min'
+): Promise<HourData[]> => {
+  const res = await api.get('/employee-query', {
+    params: { date, groupBy },
+  })
 
-  // Fetch screenshots
-  const fetchScreenshots = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/employee-query', { params:{date,groupBy}, });
-      const data = res.data?.[date];
+  const data = res.data?.[date]
+  if (!data) return []
 
-      if (!data) {
-        setGroupedScreenshots([]);
-        return;
-      }
+  const grouped: HourData[] = []
 
-      // Transform backend data into HourData[]
-      const grouped: HourData[] = [];
+  Object.entries(data).forEach(([timeKey, shots]: [string, any[]]) => {
+    const hour = parseInt(timeKey.split(':')[0], 10)
 
-      Object.entries(data).forEach(([timeKey, shots]: [string, any[]]) => {
-        const hour = parseInt(timeKey.split(':')[0], 10);
-
-        const intervalObj: Interval = {
-          interval: timeKey,
-          screenshots: shots.map((shot: any) => ({
-            id: shot.id,
-            name: shot.name,
-            url: shot.path,
-            type: shot.type,
-            created_at: shot.createdAt,
-          })),
-        };
-
-        const existingHour = grouped.find((h) => h.hour === hour);
-        if (existingHour) {
-          existingHour.intervals.push(intervalObj);
-        } else {
-          grouped.push({ hour, intervals: [intervalObj] });
-        }
-      });
-
-      // Sort hours and intervals
-      grouped.sort((a, b) => a.hour - b.hour);
-      grouped.forEach((h) =>
-        h.intervals.sort(
-          (a, b) =>
-            parseInt(a.interval.split(':')[1], 10) -
-            parseInt(b.interval.split(':')[1], 10)
-        )
-      );
-
-      setGroupedScreenshots(grouped);
-    } catch (err) {
-      console.error('Failed to fetch screenshots', err);
-      setGroupedScreenshots([]);
-    } finally {
-      setLoading(false);
+    const intervalObj: Interval = {
+      interval: timeKey,
+      screenshots: shots.map((shot: any) => ({
+        id: shot.id,
+        name: shot.name,
+        url: shot.path,
+        type: shot.type,
+        created_at: shot.createdAt,
+      })),
     }
-  };
 
-  // Call fetchScreenshots on mount or when date/groupBy changes
-  useEffect(() => {
-    fetchScreenshots();
-  }, [date, groupBy]);
+    const existingHour = grouped.find((h) => h.hour === hour)
+    if (existingHour) {
+      existingHour.intervals.push(intervalObj)
+    } else {
+      grouped.push({ hour, intervals: [intervalObj] })
+    }
+  })
+
+  grouped.sort((a, b) => a.hour - b.hour)
+  grouped.forEach((h) =>
+    h.intervals.sort(
+      (a, b) =>
+        parseInt(a.interval.split(':')[1]) -
+        parseInt(b.interval.split(':')[1])
+    )
+  )
+
+  return grouped
+}
+
+// ---------------- COMPONENT ----------------
+const Show_Screenshot: React.FC = () => {
+  const [date, setDate] = useState(
+    new Date().toISOString().split('T')[0]
+  )
+  const [groupBy, setGroupBy] = useState<'5min' | '10min' | '20min'>('10min')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalImage, setModalImage] = useState<Screenshot | null>(null)
+
+  const {
+    data: groupedScreenshots,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['screenshots', date, groupBy],
+    queryFn: () => fetchScreenshots(date, groupBy),
+  })
 
   const openModal = (shot: Screenshot) => {
-    setModalImage(shot);
-    setModalOpen(true);
-  };
+    setModalImage(shot)
+    setModalOpen(true)
+  }
 
   const closeModal = () => {
-    setModalOpen(false);
-    setModalImage(null);
-  };
+    setModalOpen(false)
+    setModalImage(null)
+  }
+
+  // ---------------- UI ----------------
+  if (isLoading) {
+    return <p className="text-center py-10 text-gray-500">Loading screenshots...</p>
+  }
+
+  if (isError) {
+    return <p className="text-center py-10 text-red-500">Failed to load screenshots</p>
+  }
 
   return (
     <div className="p-6 bg-gray-50 min-h-[70vh] rounded-lg shadow-md relative">
       {/* Controls */}
       <div className="flex items-center gap-4 mb-4">
-        <p className="font-semibold text-gray-700">Select Date:</p>
+        <p className="font-semibold">Select Date:</p>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="border border-gray-300 rounded p-2"
+          className="border p-2 rounded"
         />
 
-        <p className="font-semibold text-gray-700">Group By:</p>
+        <p className="font-semibold">Group By:</p>
         <select
           value={groupBy}
           onChange={(e) =>
             setGroupBy(e.target.value as '5min' | '10min' | '20min')
           }
-          className="border border-gray-300 rounded p-2"
+          className="border p-2 rounded"
         >
           <option value="5min">5 Minutes</option>
           <option value="10min">10 Minutes</option>
@@ -127,80 +134,57 @@ const Show_Screenshot: React.FC = () => {
       </div>
 
       {/* Content */}
-      {loading ? (
-        <p className="text-center py-10 text-gray-500">Loading screenshots...</p>
-      ) : groupedScreenshots.length === 0 ? (
-        <p className="text-center text-gray-500 py-10">No screenshots found for this date.</p>
+      {groupedScreenshots?.length === 0 ? (
+        <p className="text-center text-gray-500 py-10">
+          No screenshots found for this date.
+        </p>
       ) : (
-        groupedScreenshots.map((hourData) => (
+        groupedScreenshots?.map((hourData) => (
           <div key={hourData.hour} className="mb-6">
-            <div className="bg-gray-200 px-3 py-2 rounded flex justify-between items-center">
-              <h2 className="font-bold text-gray-700">Hour: {hourData.hour}.00</h2>
-            </div>
+            <h2 className="font-bold mb-2">Hour: {hourData.hour}.00</h2>
 
-            <div className="mt-2 space-y-4">
-              {hourData.intervals.map((interval) => (
-                <div key={interval.interval}>
-                  <p className="text-xs font-semibold text-gray-600 mb-1">
-                    {interval.interval}
-                  </p>
-                  <div className="flex gap-2 overflow-x-auto">
-                    {interval.screenshots.length > 0 ? (
-                      interval.screenshots.map((shot) => (
-                        <div
-                          key={shot.id}
-                          className="flex-shrink-0 w-32 cursor-pointer"
-                          onClick={() => openModal(shot)}
-                        >
-                          <img
-                            src={shot.url}
-                            alt={shot.name}
-                            className="w-full h-24 object-cover rounded hover:opacity-90 transition"
-                          />
-                          <p className="text-xs text-gray-500 mt-1 text-center">
-                            {new Date(shot.created_at).toLocaleTimeString('en-US', {
-                              timeZone: 'Asia/Dhaka',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              hour12: true,
-                            })}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="flex-shrink-0 w-32 h-24 flex items-center justify-center border rounded text-gray-400 text-xs">
-                        No Image
-                      </div>
-                    )}
-                  </div>
+            {hourData.intervals.map((interval) => (
+              <div key={interval.interval}>
+                <p className="text-xs font-semibold mb-1">
+                  {interval.interval}
+                </p>
+
+                <div className="flex gap-2 overflow-x-auto">
+                  {interval.screenshots.map((shot) => (
+                    <div
+                      key={shot.id}
+                      className="w-32 cursor-pointer"
+                      onClick={() => openModal(shot)}
+                    >
+                      <img
+                        src={shot.url}
+                        alt={shot.name}
+                        className="w-full h-24 object-cover rounded"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         ))
       )}
 
-      {/* Full-screen Modal */}
+      {/* Modal */}
       {modalOpen && modalImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center"
           onClick={closeModal}
         >
-          <div
-            className="bg-white p-2 rounded max-w-[90vw] max-h-[90vh] flex flex-col items-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={modalImage.url}
-              alt={modalImage.name}
-              className="max-w-[80vw] max-h-[80vh] object-contain rounded"
-            />
-          </div>
+          <img
+            src={modalImage.url}
+            alt={modalImage.name}
+            className="max-w-[80vw] max-h-[80vh]"
+          />
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Show_Screenshot;
+export default Show_Screenshot

@@ -1,12 +1,15 @@
 'use client'
-
 import React, { useState } from 'react';
 import api from '@/app/api/axios';
 import type { CreateEmployeePayload } from '@/app/types';
+import { useMutation } from '@tanstack/react-query';
+
 
 type Props = {
   onEmployeeCreated?: () => void;
 };
+
+
 
 const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
   const [employee, setEmployee] = useState<CreateEmployeePayload>({
@@ -17,63 +20,44 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
 
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<CreateEmployeePayload>>({});
   const [employeeRegisterError, setEmployeeRegisterError] = useState('');
-
   const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const PASSWORD_REGEX =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { const { name, value } = e.target; setEmployee((prev) => ({ ...prev, [name]: value })); setErrors((prev) => ({ ...prev, [name]: undefined })); setEmployeeRegisterError(''); if (name === 'email') { setEmailError(EMAIL_REGEX.test(value) ? '' : 'Invalid email format'); } if (name === 'password') { setPasswordError( PASSWORD_REGEX.test(value) ? '' : 'Password must be 8+ chars, include uppercase, lowercase, number & special character' ); } };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEmployee((prev) => ({ ...prev, [name]: value }));
 
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
-    setEmployeeRegisterError('');
-
-    if (name === 'email') {
-      setEmailError(EMAIL_REGEX.test(value) ? '' : 'Invalid email format');
-    }
-    if (name === 'password') {
-      setPasswordError(
-        PASSWORD_REGEX.test(value)
-          ? ''
-          : 'Password must be 8+ chars, include uppercase, lowercase, number & special character'
-      );
-    }
-  };
-
-  const canSubmit =
-    employee.name.trim() &&
-    employee.email.trim() &&
-    employee.password.trim() &&
-    !emailError &&
-    !passwordError && employeeRegisterError === ''&& !loading;
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-
-    setLoading(true);
-    try {
-      await api.post('/create-employee', employee);
-      alert('Employee created successfully!');
-
+  const createEmployeeMutation = useMutation({
+    mutationFn: async (employee: CreateEmployeePayload) => {
+      const res = await api.post('/create-employee', employee);
+      return res.data
+    },
+    onSuccess: (data) => {
+      console.log('SUCCESS:', data)
       setEmployee({ name: '', email: '', password: '' });
       setErrors({});
       setEmailError('');
       setPasswordError('');
-
       onEmployeeCreated?.();
-    } catch (err) {
-      console.error('Error:', err);
+    },
+    onError: () => {
       setEmployeeRegisterError('Failed to create employee, may be email already used');
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+    const canSubmit =
+    employee.name.trim() &&
+    employee.email.trim() &&
+    employee.password.trim() &&
+    !emailError &&
+    !passwordError && employeeRegisterError === '' && !createEmployeeMutation.isPending;
+  
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    createEmployeeMutation.mutate(employee);
   };
-
   return (
     <div className="flex items-center justify-center min-h-[70vh]">
       <form
@@ -121,13 +105,13 @@ const EmployeeRegister = ({ onEmployeeCreated }: Props) => {
 
         <button
           type="submit"
-          disabled={!canSubmit}
+          disabled={!canSubmit || createEmployeeMutation.isPending}
           className={`w-full p-3 rounded text-white ${
             canSubmit ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-400 cursor-not-allowed'
           }`}
         >
 
-          {loading ? 'Creating...' : 'Create Employee'}
+          {createEmployeeMutation.isPending ? 'Creating...' : 'Create Employee'}
         </button>
       </form>
     </div>
