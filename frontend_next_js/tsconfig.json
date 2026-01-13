@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "app/dashboard/owner/employee_list", "app/dashboard/employee/own_screenshot_show", "app/dashboard/employee/upload_screenshot", "app/dashboard/owner/employee_list/screenshot"  ],
   "exclude": ["node_modules"]
 }

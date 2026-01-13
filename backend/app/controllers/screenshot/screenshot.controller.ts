@@ -57,6 +57,17 @@ export default class ScreenshotController {
     }
 
     const { userId, date, groupBy } = await request.validateUsing(adminQueryValidator)
+    const name = await User.query()
+      .select('name')
+      .where('id', userId)
+      .where('role', 'employee')
+      .where('company_id', user!.companyId)
+      .first()
+
+    console.log(name)
+    if (!name) {
+      return response.badRequest({ error: 'User not found' })
+    }
 
     try {
       const screenshots = await this.screenshotService.ownerQueryService({
@@ -77,7 +88,7 @@ export default class ScreenshotController {
 
       const grouped = groupScreenshots(formattedScreenshots, groupBy ?? '10min')
       // console.log(grouped)
-      return JSON.stringify(grouped)
+      return { grouped: JSON.stringify(grouped), name }
     } catch (error) {
       // console.log('Error in ownerQueryController:', error)
       return response.badRequest({ error: error.message })

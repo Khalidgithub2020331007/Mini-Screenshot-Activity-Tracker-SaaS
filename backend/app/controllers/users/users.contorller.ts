@@ -113,7 +113,7 @@ export default class UsersController {
     }
     return response.ok({
       message: 'already login',
-      role: user.role,
+      user,
     })
   }
   public async employeeList({ request, response, auth }: HttpContext) {
@@ -126,6 +126,7 @@ export default class UsersController {
     const { page, limit, name } = await request.validateUsing(employeeListValidator)
     try {
       const employeeList = await this.userService.userListService(user!, page, limit, name)
+      console.log(employeeList)
       return response.ok(employeeList)
     } catch (error) {
       return response.badRequest({ error: error.message })
