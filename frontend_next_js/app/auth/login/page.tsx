@@ -51,7 +51,7 @@ const Login = () => {
       if (backendUser.role === 'owner') {
         router.push('/dashboard/owner/employee_create')
       }
-      else router.push('/dashboard/employee/upload_screenshot')
+      else if (backendUser.role === 'employee') router.push('/dashboard/employee/upload_screenshot')
     } catch {
       setLoginError('Invalid email or password');
       setDisableButton(true);

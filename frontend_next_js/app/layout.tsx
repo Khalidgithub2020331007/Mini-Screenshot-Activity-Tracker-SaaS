@@ -1,3 +1,5 @@
+import Providers from './providers';
+
 import './globals.css'
 
 export default function RootLayout({
@@ -8,8 +10,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-gray-100">
-        {children}
-      </body>
+        <Providers>{children}</Providers>      </body>
     </html>
   )
 }
+
+

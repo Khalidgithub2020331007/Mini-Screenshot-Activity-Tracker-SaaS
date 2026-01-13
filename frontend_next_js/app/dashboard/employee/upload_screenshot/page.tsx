@@ -1,13 +1,36 @@
+
+
 'use client'
 import React, { useState } from 'react';
-import api from '@/app/api/axios'; // make sure this axios instance includes JWT header
+import { useMutation } from '@tanstack/react-query';
+import api from '@/app/api/axios';
 
 const Add_ScreenShots: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string>('');
 
+  // Mutation for uploading
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await api.post('/upload-screenshot', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setMessage('Screenshot uploaded successfully!');
+      setFile(null);
+      setPreviewUrl(null);
+      console.log('Uploaded screenshot:', data);
+    },
+    onError: () => {
+      setMessage('Failed to upload screenshot');
+    },
+  });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] ?? null;
@@ -15,6 +38,7 @@ const Add_ScreenShots: React.FC = () => {
 
     if (selectedFile) {
       const reader = new FileReader();
+      console.log(reader,'----------')
       reader.onloadend = () => setPreviewUrl(reader.result as string);
       reader.readAsDataURL(selectedFile);
     } else {
@@ -22,45 +46,19 @@ const Add_ScreenShots: React.FC = () => {
     }
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!file) {
       setMessage('Please select a file first.');
       return;
     }
-
-    const formData = new FormData();
-    formData.append('file', file);
-
-    setLoading(true);
-    setMessage('');
-
-    try {
-      const res = await api.post('/upload-screenshot', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      setMessage('Screenshot uploaded successfully!');
-      setFile(null);
-      setPreviewUrl(null);
-
-      console.log('Uploaded screenshot:', res.data);
-    } catch {
-      setMessage('Failed to upload screenshot');
-    } finally {
-      setLoading(false);
-    }
+    uploadMutation.mutate(file);
   };
-
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold mb-4 text-center">Upload Screenshot</h2>
 
       <form onSubmit={handleUpload} className="space-y-4">
-        {/* File Input */}
         <div>
           <input
             type="file"
@@ -70,7 +68,6 @@ const Add_ScreenShots: React.FC = () => {
           />
         </div>
 
-        {/* Preview */}
         {previewUrl && (
           <div className="text-center">
             <p className="text-gray-600 mb-2">Preview:</p>
@@ -82,18 +79,16 @@ const Add_ScreenShots: React.FC = () => {
           </div>
         )}
 
-        {/* Upload Button */}
         <button
           type="submit"
-          disabled={loading}
+          disabled={uploadMutation.isPending}
           className={`w-full p-3 rounded text-white ${
-            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+            uploadMutation.isPending ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
           }`}
         >
-          {loading ? 'Uploading...' : 'Upload'}
+          {uploadMutation.isPending ? 'Uploading...' : 'Upload'}
         </button>
 
-        {/* Message */}
         {message && <p className="text-center text-sm text-gray-700 mt-2">{message}</p>}
       </form>
     </div>
