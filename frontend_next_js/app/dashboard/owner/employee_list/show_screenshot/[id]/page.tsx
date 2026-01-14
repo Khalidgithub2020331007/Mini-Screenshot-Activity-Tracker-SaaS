@@ -1,8 +1,10 @@
 'use client'
+
 import { use } from 'react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import api from '@/app/api/axios'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 /* ===================== TYPES ===================== */
 
@@ -25,108 +27,133 @@ type HourData = {
   intervals: Interval[]
 }
 
+type OwnerQueryResponse = {
+  grouped: string | Record<string, any>
+  name: {
+    name: string
+  }
+}
+
 /* ===================== COMPONENT ===================== */
 
-export default function Page({ params }: { params: Promise<{ id: number }> }) {
+export default function Page({
+  params,
+}: {
+  params: Promise<{ id: number }>
+}) {
   const { id } = use(params)
-
   const userId = id
+
   const router = useRouter()
-  const pathname = usePathname()
   const searchParams = useSearchParams()
   const queryDate = searchParams.get('date')
 
-
-  const [groupedScreenshots, setGroupedScreenshots] = useState<HourData[]>([])
-  const [loading, setLoading] = useState(false)
-  const [date, setDate] = useState(queryDate || new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(
+    queryDate || new Date().toISOString().split('T')[0]
+  )
   const [groupBy, setGroupBy] = useState<'5min' | '10min' | '20min'>('10min')
   const [modalOpen, setModalOpen] = useState(false)
   const [modalImage, setModalImage] = useState<Screenshot | null>(null)
-  const [totalScreenshots, setTotalScreenshots] = useState(0)
-  const [employeeName, setEmployeeName] = useState('No Employee found')
 
-  /* ===================== FETCH ===================== */
-  useEffect(() => {
-    if (!userId) return
+  /* ===================== FETCH FUNCTION ===================== */
 
-    const fetchScreenshots = async () => {
-      setLoading(true)
+  const fetchScreenshots = async (): Promise<{
+    groupedScreenshots: HourData[]
+    totalScreenshots: number
+    employeeName: string
+  }> => {
+    const res = await api.get<OwnerQueryResponse>('/owner-query', {
+      params: { userId, date, groupBy },
+    })
 
-      try {
-        const res = await api.get('/owner-query', {
-          params: { userId, date, groupBy },
-        })
+    const employeeName = res.data.name?.name ?? 'No Employee found'
 
-        console.log('RAW RESPONSE DATA:', res.data)
-        setEmployeeName(res.data.name.name)
+    const rawGrouped =
+      typeof res.data.grouped === 'string'
+        ? JSON.parse(res.data.grouped)[date] ?? {}
+        : res.data.grouped?.[date] ?? {}
 
-        // If API returns grouped as JSON string
-        const groupedData = res.data.grouped ? JSON.parse(res.data.grouped)[date] || {} : res.data?.[date] || {}
-        console.log('GROUPED DATA FOR DATE:', groupedData)
+    let serial = 1
+    const grouped: HourData[] = []
 
-        const total = Object.values(groupedData).flat().length
-        setTotalScreenshots(total)
-        console.log('TOTAL SCREENSHOTS:', total)
+    Object.entries(rawGrouped).forEach(([timeKey, shots]) => {
+      const hour = parseInt(timeKey.split(':')[0], 10)
 
-        let serial = 1
-        const grouped: HourData[] = []
-
-        Object.entries(groupedData).forEach(([timeKey, shots]: any) => {
-          console.log('TIME KEY:', timeKey, 'SHOTS:', shots)
-
-          const hour = parseInt(timeKey.split(':')[0], 10)
-          const interval: Interval = {
-            interval: timeKey,
-            screenshots: shots.map((shot: any) => {
-              console.log('PROCESSING SHOT:', shot)
-              return {
-                id: shot.id,
-                name: shot.name,
-                path: shot.path,
-                type: shot.type,
-                created_at: shot.createdAt,
-                serial: serial++,
-              }
-            }),
-          }
-
-          const existing = grouped.find((g) => g.hour === hour)
-          existing ? existing.intervals.push(interval) : grouped.push({ hour, intervals: [interval] })
-        })
-
-        grouped.sort((a, b) => a.hour - b.hour)
-        grouped.forEach((h) =>
-          h.intervals.sort(
-            (a, b) =>
-              parseInt(a.interval.split(':')[1], 10) -
-              parseInt(b.interval.split(':')[1], 10)
-          )
-        )
-
-        console.log('FINAL GROUPED SCREENSHOTS:', grouped)
-        setGroupedScreenshots(grouped)
-      } catch (err) {
-        console.error('ERROR FETCHING SCREENSHOTS:', err)
-        setGroupedScreenshots([])
-        setTotalScreenshots(0)
-      } finally {
-        setLoading(false)
+      const interval: Interval = {
+        interval: timeKey,
+        screenshots: (shots as any[]).map((shot) => ({
+          id: shot.id,
+          name: shot.name,
+          path: shot.path,
+          type: shot.type,
+          created_at: shot.createdAt,
+          serial: serial++,
+        })),
       }
-    }
 
-    fetchScreenshots()
-  }, [userId, date, groupBy])
+      const existing = grouped.find((g) => g.hour === hour)
+      existing
+        ? existing.intervals.push(interval)
+        : grouped.push({ hour, intervals: [interval] })
+    })
+
+    grouped.sort((a, b) => a.hour - b.hour)
+    grouped.forEach((h) =>
+      h.intervals.sort(
+        (a, b) =>
+          parseInt(a.interval.split(':')[1], 10) -
+          parseInt(b.interval.split(':')[1], 10)
+      )
+    )
+
+    const totalScreenshots = grouped
+      .flatMap((h) => h.intervals)
+      .flatMap((i) => i.screenshots).length
+
+    return {
+      groupedScreenshots: grouped,
+      totalScreenshots,
+      employeeName,
+    }
+  }
+
+  /* ===================== TANSTACK QUERY ===================== */
+
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['screenshots', userId, date, groupBy],
+    queryFn: fetchScreenshots,
+    enabled: !!userId,
+  })
+
+  /* ===================== HANDLERS ===================== */
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDate(e.target.value)
     const params = new URLSearchParams(searchParams.toString())
     params.set('date', e.target.value)
-    router.replace(`/dashboard/owner/employee_list/show_screenshot/${id}?${params.toString()}`)
+    router.replace(
+      `/dashboard/owner/employee_list/show_screenshot/${id}?${params.toString()}`
+    )
   }
-  console.log(employeeName)
 
   /* ===================== UI ===================== */
+
+  if (isLoading) {
+    return <p className="text-center mt-10">Loading...</p>
+  }
+
+  if (isError) {
+    return (
+      <p className="text-center mt-10 text-red-500">
+        Failed to load screenshots
+      </p>
+    )
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-[70vh] rounded-lg shadow">
       <button
@@ -135,7 +162,10 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
       >
         Back
       </button>
-      <h1 className="text-2xl font-bold">Employee: {employeeName}</h1>
+
+      <h1 className="text-2xl font-bold">
+        Employee: {data?.employeeName}
+      </h1>
 
       <div className="flex justify-between mb-4">
         <div className="flex gap-4">
@@ -149,7 +179,9 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
           <select
             value={groupBy}
             onChange={(e) =>
-              setGroupBy(e.target.value as '5min' | '10min' | '20min')
+              setGroupBy(
+                e.target.value as '5min' | '10min' | '20min'
+              )
             }
             className="border p-2 rounded"
           >
@@ -160,41 +192,42 @@ export default function Page({ params }: { params: Promise<{ id: number }> }) {
         </div>
 
         <div className="font-bold">
-          Total: <span className="text-blue-600">{totalScreenshots}</span>
+          Total:{' '}
+          <span className="text-blue-600">
+            {data?.totalScreenshots}
+          </span>
         </div>
       </div>
 
-      {loading ? (
-        <p className="text-center">Loading...</p>
-      ) : (
-        groupedScreenshots.map((hour) => (
-          <div key={hour.hour} className="mb-6">
-            <div className="bg-gray-200 px-3 py-2 rounded font-bold">
-              Hour {hour.hour}.00
-            </div>
-
-            {hour.intervals.map((interval) => (
-              <div key={interval.interval} className="mt-2">
-                <p className="text-xs font-semibold">{interval.interval}</p>
-
-                <div className="flex gap-2 overflow-x-auto">
-                  {interval.screenshots.map((shot) => (
-                    <img
-                      key={shot.id}
-                      src={shot.path} // modal-friendly
-                      onClick={() => {
-                        setModalImage(shot)
-                        setModalOpen(true)
-                      }}
-                      className="w-28 h-24 object-cover rounded cursor-pointer"
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+      {data?.groupedScreenshots.map((hour) => (
+        <div key={hour.hour} className="mb-6">
+          <div className="bg-gray-200 px-3 py-2 rounded font-bold">
+            Hour {hour.hour}.00
           </div>
-        ))
-      )}
+
+          {hour.intervals.map((interval) => (
+            <div key={interval.interval} className="mt-2">
+              <p className="text-xs font-semibold">
+                {interval.interval}
+              </p>
+
+              <div className="flex gap-2 overflow-x-auto">
+                {interval.screenshots.map((shot) => (
+                  <img
+                    key={shot.id}
+                    src={shot.path}
+                    onClick={() => {
+                      setModalImage(shot)
+                      setModalOpen(true)
+                    }}
+                    className="w-28 h-24 object-cover rounded cursor-pointer"
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
 
       {modalOpen && modalImage && (
         <div

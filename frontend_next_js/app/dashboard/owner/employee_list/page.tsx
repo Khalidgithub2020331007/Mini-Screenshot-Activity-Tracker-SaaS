@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '@/app/api/axios'
 import { Trash2 } from 'lucide-react'
 import type { User } from '@/app/types'
@@ -17,102 +18,85 @@ type Meta = {
 
 const EmployeeListShow = () => {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
-  const [employees, setEmployees] = useState<User[]>([])
-  const [meta, setMeta] = useState<Meta>({
-    currentPage: 1,
-    firstPage: 1,
-    lastPage: 1,
-    totalPages: 1,
-    perPage: 10,
-    total: 0,
-  })
-
-  const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [limit] = useState(5)
   const [searchQuery, setSearchQuery] = useState('')
   const [deleteUserId, setDeleteUserId] = useState<number | null>(null)
-  const [deleting, setDeleting] = useState(false)
 
   /* ---------------- FETCH EMPLOYEES ---------------- */
   const fetchEmployees = async () => {
-    setLoading(true)
-    try {
-      const res = await api.get('/employees_list', {
-        params: {
-          page,
-          limit,
-          name: searchQuery || '',
-        },
-      })
-      console.log(res)
-      
+    const res = await api.get('/employees_list', {
+      params: {
+        page,
+        limit,
+        name: searchQuery || '',
+      },
+    })
 
-      const responseData = res.data?.data
-      if (!responseData) {
-        setEmployees([])
-        return
-      }
+    const responseData = res.data?.data
 
-      setEmployees(responseData.data)
-
-      const m = responseData.meta
-      setMeta({
-        currentPage: m.currentPage,
-        firstPage: m.firstPage,
-        lastPage: m.lastPage,
-        perPage: m.perPage,
-        totalPages: Math.ceil(m.total / m.perPage),
-        total: m.total,
-      })
-    } catch (error) {
-      console.error(error)
-      setEmployees([])
-    } finally {
-      setLoading(false)
+    return {
+      employees: responseData?.data ?? [],
+      meta: {
+        currentPage: responseData?.meta.currentPage ?? 1,
+        firstPage: responseData?.meta.firstPage ?? 1,
+        lastPage: responseData?.meta.lastPage ?? 1,
+        perPage: responseData?.meta.perPage ?? limit,
+        total: responseData?.meta.total ?? 0,
+        totalPages: Math.ceil(
+          (responseData?.meta.total ?? 0) /
+            (responseData?.meta.perPage ?? limit)
+        ),
+      },
     }
   }
 
-  /* ---------------- EFFECT ---------------- */
-  useEffect(() => {
-    const t = setTimeout(fetchEmployees, 300)
-    return () => clearTimeout(t)
-  }, [page, searchQuery])
+  const {
+    data,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['employees', page, searchQuery],
+    queryFn: fetchEmployees,
+    keepPreviousData: true,
+  })
 
-  /* ---------------- DELETE ---------------- */
-  const confirmDelete = async () => {
-    if (!deleteUserId) return
-    setDeleting(true)
-    try {
-      await api.delete('/delete-employee', {
-        params: { employeeId: deleteUserId },
-      })
+  /* ---------------- DELETE EMPLOYEE ---------------- */
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: (employeeId: number) =>
+      api.delete('/delete-employee', {
+        params: { employeeId },
+      }),
+    onSuccess: () => {
       setDeleteUserId(null)
-      fetchEmployees()
-    } finally {
-      setDeleting(false)
-    }
-  }
+      queryClient.invalidateQueries({ queryKey: ['employees'] })
+    },
+  })
 
   /* ---------------- NAVIGATION ---------------- */
   const showScreenshots = (id: number) => {
     const date = new Date().toISOString().split('T')[0]
-    console.log(date)
-    router.push(`/dashboard/owner/employee_list/show_screenshot/${id}?date=${date}`)
+    router.push(
+      `/dashboard/owner/employee_list/show_screenshot/${id}?date=${date}`
+    )
   }
+
+  const employees = data?.employees ?? []
+  const meta = data?.meta
 
   /* ---------------- RENDER ---------------- */
   return (
     <div className="p-6 bg-gray-50 min-h-[70vh] rounded-lg shadow">
       <h2 className="text-2xl font-bold text-center mb-6">
         Employee List
-        
-
       </h2>
+
       <p className="text-center text-sm text-gray-600 mb-4">
-          Total Employees: <span className="font-semibold">{meta.total}</span>
-        </p>
+        Total Employees:{' '}
+        <span className="font-semibold">{meta?.total ?? 0}</span>
+      </p>
 
       {/* Search */}
       <div className="mb-6 flex justify-center">
@@ -128,8 +112,12 @@ const EmployeeListShow = () => {
       </div>
 
       {/* Content */}
-      {loading ? (
+      {isLoading ? (
         <p className="text-center">Loading...</p>
+      ) : isError ? (
+        <p className="text-center text-red-500">
+          Failed to load employees
+        </p>
       ) : employees.length === 0 ? (
         <p className="text-center">No employees found</p>
       ) : (
@@ -158,9 +146,8 @@ const EmployeeListShow = () => {
       )}
 
       {/* ---------------- PAGINATION ---------------- */}
-      {meta.totalPages > 1 && (
+      {meta && meta.totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 mt-8">
-          {/* Prev */}
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -169,24 +156,23 @@ const EmployeeListShow = () => {
             Prev
           </button>
 
-          {/* Pages */}
-          {Array.from({ length: meta.totalPages }, (_, i) => i + 1).map(
-            (p) => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`px-3 py-1 border rounded ${
-                  page === p
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white'
-                }`}
-              >
-                {p}
-              </button>
-            )
-          )}
+          {Array.from(
+            { length: meta.totalPages },
+            (_, i) => i + 1
+          ).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`px-3 py-1 border rounded ${
+                page === p
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white'
+              }`}
+            >
+              {p}
+            </button>
+          ))}
 
-          {/* Next */}
           <button
             disabled={page === meta.totalPages}
             onClick={() =>
@@ -218,11 +204,15 @@ const EmployeeListShow = () => {
               </button>
 
               <button
-                onClick={confirmDelete}
-                disabled={deleting}
+                onClick={() =>
+                  deleteEmployeeMutation.mutate(deleteUserId)
+                }
+                disabled={deleteEmployeeMutation.isPending}
                 className="px-4 py-2 bg-red-600 text-white rounded"
               >
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleteEmployeeMutation.isPending
+                  ? 'Deleting...'
+                  : 'Delete'}
               </button>
             </div>
           </div>
